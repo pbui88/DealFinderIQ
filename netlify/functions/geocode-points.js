@@ -1,0 +1,427 @@
+import { requireAuth, adminSupabase, ok, err, options, isValidUUID } from './utils/supabase.js'
+
+// Nominatim throttling (below) now serializes ~1 call/point through this
+// invocation, so CAP must stay small enough that a worst-case batch (every
+// point needing Nominatim) still finishes inside the 26s function timeout
+// (netlify.toml) — 20 points × ~1.1s ≈ 22s, leaving headroom for the rest of
+// the work each point does (Positionstack calls, DB writes).
+const CAP = 20
+
+// Fetch the actual Street View panorama location (free metadata call).
+// The panorama is where the camera physically was — offset from here gives
+// a much more accurate property geocoding than offsetting from the road center.
+async function getPanoramaLocation(lat, lng, apiKey) {
+  try {
+    const url = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&return_error_code=true&key=${apiKey}`
+    const res  = await fetch(url)
+    const data = await res.json()
+    if (data.status === 'OK' && data.location) return data.location
+    if (data.status && data.status !== 'ZERO_RESULTS' && data.status !== 'NOT_FOUND') {
+      console.error(`Street View metadata rejected: ${data.status}${data.error_message ? ' — ' + data.error_message : ''}`)
+    }
+  } catch {}
+  return null
+}
+
+// Resolve a Google Maps API key for metadata calls.
+async function resolveGoogleKey(userId, supabase) {
+  const [{ data: keyRow }, { data: profile }] = await Promise.all([
+    supabase.from('user_keys').select('google_maps_key').eq('user_id', userId).maybeSingle(),
+    supabase.from('profiles').select('role').eq('id', userId).maybeSingle(),
+  ])
+  return keyRow?.google_maps_key || (profile?.role === 'admin' ? process.env.GOOGLE_MAPS_KEY : null)
+}
+
+// Offset lat/lng by distanceMeters in the given compass heading (degrees).
+// Used to move the geocoding query point from the road center toward the property.
+function offsetCoords(lat, lng, headingDeg, distanceMeters) {
+  const R       = 6371000
+  const bearing = (headingDeg * Math.PI) / 180
+  const lat1    = (lat * Math.PI) / 180
+  const lng1    = (lng * Math.PI) / 180
+  const lat2    = Math.asin(
+    Math.sin(lat1) * Math.cos(distanceMeters / R) +
+    Math.cos(lat1) * Math.sin(distanceMeters / R) * Math.cos(bearing)
+  )
+  const lng2 = lng1 + Math.atan2(
+    Math.sin(bearing) * Math.sin(distanceMeters / R) * Math.cos(lat1),
+    Math.cos(distanceMeters / R) - Math.sin(lat1) * Math.sin(lat2)
+  )
+  return { lat: (lat2 * 180) / Math.PI, lng: (lng2 * 180) / Math.PI }
+}
+
+// Rejects strings that look like raw coordinates, e.g. "37.123, -122.456"
+function looksLikeLatLng(str) {
+  return /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test((str || '').trim())
+}
+
+// Attempts to extract a property-level address from a PositionStack response.
+// Returns a valid address string with house number, or null if none found.
+function extractAddress(results) {
+  // Must have a house number — street-only results are too imprecise
+  const property = results.find(r => r.number != null && String(r.number).trim() !== '')
+  if (!property) return null
+
+  const regionCode = (property.region_code || property.region || '').trim()
+
+  // Never use Positionstack's postal_code — it returns malformed values in
+  // some areas (e.g. "797 69", "982 27"). Nominatim always fills the zip.
+  if (property.label && !looksLikeLatLng(property.label)) {
+    // Strip any zip or zip+4 PS embedded in the label, then country tokens.
+    // (?<!^) keeps this from eating a 5-digit house number at the very start
+    // of the label (e.g. "10309 Shale Avenue, Cleveland, OH, USA") — house
+    // numbers always lead the label, a zip never does.
+    let label = property.label
+      .replace(/(?<!^)\b\d{5}([\s-]+\d{4})?\b/g, '')
+      .replace(/,?\s*(United States|USA|US)\s*$/i, '')
+      .replace(/,\s*,/g, ',')
+      .replace(/,\s*$/, '')
+      .trim()
+    return looksLikeLatLng(label) ? null : label
+  }
+
+  // Fallback: build manually without zip (Nominatim fills it afterwards)
+  const houseNum   = String(property.number).trim()
+  const street     = property.street || property.name || ''
+  const locality   = property.locality || property.county || ''
+  const streetAddr = [houseNum, street].filter(Boolean).join(' ')
+  const parts      = [streetAddr, locality, regionCode].filter(Boolean)
+
+  const address = parts.join(', ')
+  return (!address || looksLikeLatLng(address)) ? null : address
+}
+
+// Returns a property-level address or null.
+// Retries once with a wider candidate pool if the first pass yields nothing.
+async function reverseGeocode(lat, lng) {
+  const base = `https://api.positionstack.com/v1/reverse?access_key=${process.env.POSITIONSTACK_API_KEY}&query=${lat},${lng}&output=json`
+
+  // First attempt — tight limit
+  const res1  = await fetch(`${base}&limit=10`)
+  const data1 = await res1.json()
+  if (data1.error) throw new Error(data1.error.message || `Positionstack error (${data1.error.code})`)
+
+  const address1 = extractAddress(data1.data || [])
+  if (address1) return address1
+
+  // Retry with wider candidate pool to find a property-level hit
+  console.warn(`[geocode] first pass found no property address at ${lat},${lng} — retrying with limit=25`)
+  const res2  = await fetch(`${base}&limit=25`)
+  const data2 = await res2.json()
+  if (data2.error) throw new Error(data2.error.message || `Positionstack error (${data2.error.code})`)
+
+  const address2 = extractAddress(data2.data || [])
+  if (!address2) {
+    console.warn(`[geocode] retry also failed at ${lat},${lng} — no property address found`)
+  }
+  return address2
+}
+
+// Nominatim's usage policy caps free reverse-geocoding at ~1 request/second.
+// A single geocode-points invocation processes up to CAP points concurrently
+// (Promise.allSettled in the handler below), which used to fire dozens of
+// simultaneous Nominatim requests — Nominatim would rate-limit most of them,
+// and the failure was swallowed as if the address simply didn't exist. Every
+// Nominatim call in this module now goes through this queue so they run one
+// at a time, spaced a full second apart, no matter how many points are in
+// flight at once.
+let nominatimReady = Promise.resolve()
+function throttleNominatim(task) {
+  const run = nominatimReady.then(task)
+  nominatimReady = run.then(() => {}, () => {}).then(() => new Promise(r => setTimeout(r, 1100)))
+  return run
+}
+
+async function fetchNominatim(url) {
+  return throttleNominatim(async () => {
+    const res = await fetch(url, { headers: { 'User-Agent': 'DealFinderIQApp/1.0' } })
+    if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`)
+    return res.json()
+  })
+}
+
+// Free zip-code lookup via Nominatim (OpenStreetMap) — primary source, proven
+// reliable (unlike Positionstack's postal_code, see below). A zip is a
+// nice-to-have with a Positionstack fallback right below, so any failure here
+// (including a rate limit) just falls through — no need to distinguish it.
+async function lookupZipNominatim(lat, lng) {
+  try {
+    const data = await fetchNominatim(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+    const pc = data.address?.postcode || ''
+    return pc.replace(/^(\d{5})[\s-]\d{4}$/, '$1').trim() || null
+  } catch (e) {
+    console.error(`[geocode] Nominatim zip lookup failed ${lat},${lng}:`, e.message)
+    return null
+  }
+}
+
+// Fallback zip source for the rare point Nominatim has no postcode data for.
+// Positionstack's postal_code is normally unreliable (malformed values like
+// "797 69" in some areas — see extractAddress), so only accept it here if it
+// passes a strict 5-digit / ZIP+4 format check.
+async function lookupZipPositionstack(lat, lng) {
+  try {
+    const res  = await fetch(
+      `https://api.positionstack.com/v1/reverse?access_key=${process.env.POSITIONSTACK_API_KEY}&query=${lat},${lng}&output=json&limit=1`
+    )
+    const data = await res.json()
+    if (data.error) return null
+    const pc = (data.data?.[0]?.postal_code || '').trim()
+    const m  = pc.match(/^(\d{5})(-\d{4})?$/)
+    return m ? m[1] : null
+  } catch {
+    return null
+  }
+}
+
+// Nominatim first, Positionstack as a validated fallback if it has nothing.
+async function lookupZip(lat, lng) {
+  return (await lookupZipNominatim(lat, lng)) || (await lookupZipPositionstack(lat, lng))
+}
+
+// Fallback property lookup for when Positionstack can't find a house-numbered
+// match at all — Nominatim/OSM sometimes has house-level data Positionstack
+// misses. Builds an address without a zip (lookupZip fills that in after),
+// matching the shape extractAddress() produces.
+//
+// Unlike lookupZipNominatim, HTTP/network failures here are NOT swallowed —
+// they propagate up to geocodePoint's catch block, which marks the point
+// 'error' instead of 'no_result'. That distinction matters: 'no_result' is
+// treated as a permanent dead end (credit refunded, point never retried
+// again), but a rate-limited or dropped request isn't proof the address
+// doesn't exist — it just means try again later. Only a clean response that
+// genuinely has no house number counts as "not found".
+async function reverseGeocodeNominatim(lat, lng) {
+  const data = await fetchNominatim(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`)
+  const a = data.address
+  const street = a?.road || a?.pedestrian
+  if (!a?.house_number || !street) return null
+
+  const city  = a.city || a.town || a.village || a.hamlet || ''
+  // ISO3166-2-lvl4 looks like "US-TX" — cheaper and more reliable than
+  // mapping Nominatim's full state name ("Texas") to an abbreviation.
+  const state = (a['ISO3166-2-lvl4'] || '').split('-')[1] || ''
+
+  const parts = [`${a.house_number} ${street}`, city, state].filter(Boolean)
+  return parts.join(', ')
+}
+
+// Inject a zip code into an address that already has a 2-letter state abbreviation.
+// Strips any existing trailing digits first (partial or wrong zip from Positionstack)
+// so we never get "TX 7 79763" or "TX 79769 79763".
+// "123 Main St, Phoenix, AZ"       → "123 Main St, Phoenix, AZ 85001"
+// "123 Main St, Phoenix, AZ 7"     → "123 Main St, Phoenix, AZ 85001"
+// "123 Main St, Phoenix, AZ 79769" → "123 Main St, Phoenix, AZ 85001"
+function injectZip(address, zip) {
+  const stripped = address.replace(/[\s\d-]+$/, '').trim()
+  const patched  = stripped.replace(/(,\s*)([A-Z]{2})$/, `$1$2 ${zip}`)
+  return patched !== stripped ? patched : `${stripped} ${zip}`
+}
+
+// A resolved address with no leading house number (e.g. a business/POI name)
+// can never be matched to a mailing address by skip trace — it's not a
+// temporary gap like a missing zip, it's permanently unusable.
+function hasNoHouseNumber(address) {
+  return !address || !/^\d/.test(address.trim())
+}
+
+// Refunds the 1 scan credit charged for this point's Street View download,
+// but only if a credit was actually charged for it (primaries get a
+// usage_logs row at download time; deduped/copied points don't) and it
+// hasn't already been refunded.
+async function refundCreditIfCharged(pt, userId, isAdmin, supabase) {
+  if (isAdmin || pt.credit_refunded) return false
+  const { data: log } = await supabase
+    .from('usage_logs')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('service', 'street_view')
+    .contains('metadata', { pointId: pt.id })
+    .limit(1)
+    .maybeSingle()
+  if (!log) return false
+
+  await supabase.rpc('refund_purchased_credit', { p_user_id: userId, p_points: 1 })
+  await supabase.from('scan_points').update({ credit_refunded: true }).eq('id', pt.id)
+  return true
+}
+
+// Exported so scheduled-zip-backfill.js can reuse the exact same geocode +
+// refund logic for its system-wide sweep instead of duplicating it.
+export async function geocodePoint(pt, googleKey, supabase, userId, isAdmin) {
+  // Skip only if address has a house number AND a 5-digit zip — it's complete.
+  if (pt.address && !looksLikeLatLng(pt.address) && /^\d/.test(pt.address.trim()) && /\d{5}\s*$/.test(pt.address)) {
+    return { pointId: pt.id, status: 'skipped' }
+  }
+
+  // Address exists with a house number but missing zip — skip Positionstack, only need Nominatim.
+  // Addresses without a house number fall through to full Positionstack re-geocode.
+  if (pt.address && !looksLikeLatLng(pt.address) && /^\d/.test(pt.address.trim())) {
+    try {
+      const zip = await lookupZip(pt.lat, pt.lng)
+      if (zip) {
+        const address = injectZip(pt.address, zip)
+        await supabase.from('scan_points')
+          .update({ address, updated_at: new Date().toISOString() })
+          .eq('id', pt.id)
+        return { pointId: pt.id, status: 'geocoded', address }
+      }
+    } catch (e) {
+      console.error(`Zip lookup failed ${pt.id}:`, e.message)
+    }
+    return { pointId: pt.id, status: 'no_zip' }
+  }
+
+  try {
+    let address = null
+    const headingDeg = pt.road_bearing != null ? (pt.road_bearing + 90) % 360 : null
+
+    // Use actual panorama location as the base for offsetting — it's where the
+    // Street View camera physically was, giving much more accurate property geocoding.
+    let baseLat = pt.lat
+    let baseLng = pt.lng
+    if (googleKey) {
+      const pano = await getPanoramaLocation(pt.lat, pt.lng, googleKey)
+      if (pano) { baseLat = pano.lat; baseLng = pano.lng }
+    }
+
+    let geocodeLat = baseLat, geocodeLng = baseLng
+    if (headingDeg != null) {
+      const { lat, lng } = offsetCoords(baseLat, baseLng, headingDeg, 20)
+      geocodeLat = lat; geocodeLng = lng
+      address = await reverseGeocode(lat, lng)
+    } else {
+      // No road bearing (grid fallback): try both perpendicular directions
+      const { lat: lat1, lng: lng1 } = offsetCoords(baseLat, baseLng, 90, 20)
+      address = await reverseGeocode(lat1, lng1)
+      if (address) { geocodeLat = lat1; geocodeLng = lng1 }
+      if (!address) {
+        const { lat: lat2, lng: lng2 } = offsetCoords(baseLat, baseLng, 270, 20)
+        address = await reverseGeocode(lat2, lng2)
+        if (address) { geocodeLat = lat2; geocodeLng = lng2 }
+      }
+      if (!address) address = await reverseGeocode(baseLat, baseLng)
+    }
+
+    // Positionstack found nothing property-level — try Nominatim/OSM at the
+    // same offset point before giving up. Different data sources, so this
+    // occasionally finds a house number Positionstack doesn't have.
+    if (!address) address = await reverseGeocodeNominatim(geocodeLat, geocodeLng)
+
+    // Always get the zip — Nominatim primary, Positionstack validated fallback.
+    if (address) {
+      const zip = await lookupZip(geocodeLat, geocodeLng)
+      if (zip) address = injectZip(address, zip)
+    }
+
+    if (address && !hasNoHouseNumber(address)) {
+      // Persist the exact point this address was resolved from — collect-images.js
+      // aims the camera at property_lat/lng instead of the raw road-snapped scan
+      // point, so the photo and the address always refer to the same location
+      // instead of two independently-guessed offsets that can drift onto
+      // different houses (adjacent lots, curves, corner lots).
+      await supabase.from('scan_points')
+        .update({ address, property_lat: geocodeLat, property_lng: geocodeLng, updated_at: new Date().toISOString() })
+        .eq('id', pt.id)
+      return { pointId: pt.id, status: 'geocoded', address }
+    }
+
+    // No property-level address found (or the label had no house number, e.g.
+    // a business/POI name) — this point can never be matched to a mailing
+    // address, so refund the scan credit it cost instead of leaving the user
+    // to pay for a dead end.
+    if (address) {
+      await supabase.from('scan_points')
+        .update({ address, updated_at: new Date().toISOString() })
+        .eq('id', pt.id)
+    }
+    const refunded = await refundCreditIfCharged(pt, userId, isAdmin, supabase)
+    return { pointId: pt.id, status: 'no_result', refunded }
+  } catch (e) {
+    console.error(`Geocode failed ${pt.id}:`, e.message)
+    return { pointId: pt.id, status: 'error', error: e.message }
+  }
+}
+
+export const handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return options()
+  if (event.httpMethod !== 'POST') return err('Method not allowed', 405)
+
+  const { user, role, error } = await requireAuth(event)
+  if (error) return err(error, 401)
+  const isAdmin = role === 'admin'
+
+  if (!process.env.POSITIONSTACK_API_KEY) return err('POSITIONSTACK_API_KEY not configured', 503)
+
+  const { projectId, pointIds } = JSON.parse(event.body || '{}')
+  if (!isValidUUID(projectId) || !Array.isArray(pointIds) || !pointIds.length) {
+    return err('projectId and pointIds required')
+  }
+  const validIds = pointIds.filter(isValidUUID)
+  if (!validIds.length) return err('No valid pointIds')
+
+  const supabase = adminSupabase()
+
+  // Verify project belongs to this user
+  const { data: project } = await supabase
+    .from('projects').select('id').eq('id', projectId).eq('user_id', user.id).maybeSingle()
+  if (!project) return err('Project not found', 404)
+
+  // Fetch the requested points (road_bearing needed to offset toward the property)
+  const { data: requested } = await supabase
+    .from('scan_points')
+    .select('id, lat, lng, address, road_bearing, credit_refunded')
+    .in('id', validIds.slice(0, CAP))
+
+  // Also find any points in this project that have a lat/lng-looking address
+  // so they get cleaned up even if not in the current batch. Page through —
+  // PostgREST caps a single request at 1000 rows, and with no deterministic
+  // order a project with 1000+ already-addressed points could push the actual
+  // bad (lat/lng) ones past that cap, silently skipping them forever. Stop
+  // early once we have enough candidates since only CAP get processed anyway.
+  const latLngPts = []
+  for (let from = 0; latLngPts.length < CAP; from += 1000) {
+    const { data: page } = await supabase
+      .from('scan_points')
+      .select('id, lat, lng, address, road_bearing, credit_refunded')
+      .eq('project_id', projectId)
+      .not('address', 'is', null)
+      .range(from, from + 999)
+    if (!page?.length) break
+    latLngPts.push(...page.filter(p => looksLikeLatLng(p.address)))
+    if (page.length < 1000) break
+  }
+
+  // Merge, deduplicate by id, cap total
+  const seen = new Set()
+  const pts  = []
+  for (const pt of [...(requested || []), ...latLngPts]) {
+    if (!seen.has(pt.id)) { seen.add(pt.id); pts.push(pt) }
+    if (pts.length >= CAP) break
+  }
+
+  if (!pts.length) return ok({ results: [] })
+
+  const googleKey = await resolveGoogleKey(user.id, supabase)
+
+  const settled = await Promise.allSettled(
+    pts.map(pt => geocodePoint(pt, googleKey, supabase, user.id, isAdmin))
+  )
+
+  const results       = settled.map(s => s.status === 'fulfilled' ? s.value : { status: 'error' })
+  const geocodedCount = results.filter(r => r.status === 'geocoded').length
+  const refundedCount = results.filter(r => r.refunded).length
+
+  if (geocodedCount > 0) {
+    await supabase.from('usage_logs').insert({
+      user_id:  user.id,
+      service:  'geocoding',
+      action:   'reverse_geocode',
+      count:    geocodedCount,
+      cost_usd: 0,
+      metadata: { projectId, provider: 'positionstack' },
+    })
+  }
+
+  return ok({ results, refundedCount })
+}

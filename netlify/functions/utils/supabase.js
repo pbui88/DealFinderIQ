@@ -1,0 +1,89 @@
+import { createClient } from '@supabase/supabase-js'
+
+export function adminSupabase() {
+  return createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
+
+// Supabase/PostgREST caps each response at a max row count (commonly 1000),
+// regardless of .limit(). This fetches every row matching a query by paging
+// through with .range() until an empty page is returned.
+const PAGE_SIZE = 1000
+
+export async function fetchAllRows(buildQuery) {
+  let rows = []
+  let from = 0
+  while (true) {
+    const { data, error } = await buildQuery(from, from + PAGE_SIZE - 1)
+    if (error || !data?.length) break
+    rows = rows.concat(data)
+    from += data.length
+  }
+  return rows
+}
+
+export async function getUserFromToken(token) {
+  const client = adminSupabase()
+  const { data: { user }, error } = await client.auth.getUser(token)
+  if (error || !user) return null
+  return user
+}
+
+export async function requireAuth(event, { allowInactive = false } = {}) {
+  const token = event.headers.authorization?.replace('Bearer ', '') ||
+                event.headers.Authorization?.replace('Bearer ', '')
+  if (!token) {
+    console.warn('[requireAuth] 401 no token —', event.path)
+    return { user: null, error: 'Unauthorized' }
+  }
+  const user = await getUserFromToken(token)
+  if (!user) {
+    console.warn('[requireAuth] 401 invalid/expired token —', event.path)
+    return { user: null, error: 'Invalid token' }
+  }
+
+  const supabase = adminSupabase()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_active, role')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (!allowInactive && profile?.is_active === false) {
+    console.warn('[requireAuth] 401 account inactive — user:', user.id, user.email, 'path:', event.path)
+    return { user: null, error: 'Account pending activation' }
+  }
+
+  return { user, role: profile?.role ?? 'user', error: null }
+}
+
+export async function requireAdmin(event) {
+  const { user, error } = await requireAuth(event)
+  if (error) return { user: null, error }
+  const supabase = adminSupabase()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'admin') return { user: null, error: 'Forbidden' }
+  return { user, error: null }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+export const isValidUUID = (id) => typeof id === 'string' && UUID_RE.test(id)
+
+export function getPathParam(event, fnName) {
+  const url    = new URL(event.rawUrl || `http://x${event.path}`, 'http://x')
+  const prefix = `/.netlify/functions/${fnName}/`
+  return url.pathname.startsWith(prefix) ? url.pathname.slice(prefix.length) : null
+}
+
+export const CORS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Content-Type': 'application/json',
+}
+
+export function ok(body)              { return { statusCode: 200, headers: CORS, body: JSON.stringify(body) } }
+export function err(msg, code = 400)  { return { statusCode: code, headers: CORS, body: JSON.stringify({ error: msg }) } }
+export function options()             { return { statusCode: 204, headers: CORS } }

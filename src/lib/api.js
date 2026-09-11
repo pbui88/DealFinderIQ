@@ -1,0 +1,125 @@
+import { supabase } from './supabase'
+
+async function getToken() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.access_token) return session.access_token
+  // Session missing or expired — attempt silent refresh
+  const { data } = await supabase.auth.refreshSession()
+  return data?.session?.access_token ?? null
+}
+
+async function call(fn, method = 'GET', body = null) {
+  const token = await getToken()
+  if (!token) console.warn('[api] getToken() returned null — no active session for', fn)
+  const res = await fetch(`/.netlify/functions/${fn}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(body != null ? { body: JSON.stringify(body) } : {}),
+  })
+  if (res.status === 401) {
+    const body401 = await res.json().catch(() => ({}))
+    console.error('[api] 401 from', fn, '— reason:', body401.error, '— token present:', !!token)
+    await supabase.auth.signOut()
+    window.location.reload()
+    throw new Error('Session expired. Please sign in again.')
+  }
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const e = new Error(data.error || `Request failed (${res.status})`)
+    e.status = res.status
+    throw e
+  }
+  return data
+}
+
+// ── Projects ────────────────────────────────────────────────
+export const getProjects      = ()         => call('projects')
+export const createProject    = (body)     => call('projects', 'POST', body)
+export const updateProject    = (id, body) => call(`projects/${id}`, 'PATCH', body)
+export const deleteProject    = (id)       => call(`projects/${id}`, 'DELETE')
+
+// ── Point Generation ────────────────────────────────────────
+export const generatePoints   = (projectId, body) =>
+  call(`generate-points/${projectId}`, 'POST', body)
+
+// ── Image Collection (batch of point IDs) ───────────────────
+export const collectImages    = (projectId, pointIds) =>
+  call('collect-images', 'POST', { projectId, pointIds })
+
+// ── AI Analysis (batch of point IDs) ────────────────────────
+export const analyzePoints    = (projectId, pointIds) =>
+  call('analyze-points', 'POST', { projectId, pointIds })
+
+// ── Reverse Geocoding ────────────────────────────────────────
+export const geocodePoints    = (projectId, pointIds) =>
+  call('geocode-points', 'POST', { projectId, pointIds })
+
+// ── Export ──────────────────────────────────────────────────
+export const exportProject    = (projectId, format, filters = {}) =>
+  call('export-project', 'POST', { projectId, format, filters })
+
+// ── Usage (current user) ─────────────────────────────────────
+export const getMyUsage = () => call('my-usage')
+
+// ── Credits / Authorize.net ───────────────────────────────────
+export const createPayment          = (points) => call('create-payment', 'POST', { points })
+export const createSkipTracePayment = (amount) => call('create-skip-trace-payment', 'POST', { amount })
+
+// ── User Keys (BYOK) ─────────────────────────────────────────
+export const getUserKeyStatus = ()    => call('user-keys')
+export const saveUserKey      = (key) => call('user-keys', 'POST', { google_maps_key: key })
+export const deleteUserKey    = ()    => call('user-keys', 'DELETE')
+
+// ── Skip Trace ───────────────────────────────────────────────
+// GET /skip-trace is paginated server-side (a heavy user's full history can
+// exceed the ~6MB Lambda response cap in one shot) — loop pages together here
+// so callers still get the complete list back as before.
+export async function getSkipTraceRecords() {
+  const limit = 1500
+  let offset  = 0
+  let records = []
+  while (true) {
+    const res = await call(`skip-trace?offset=${offset}&limit=${limit}`)
+    records = records.concat(res.records || [])
+    if (!res.hasMore || !res.records?.length) break
+    offset += res.records.length
+  }
+  return { records }
+}
+export const saveSkipTraceRecords  = (records, list_name) => call('skip-trace', 'POST', { records, list_name })
+export const deleteSkipTraceRecord = (id)        => call(`skip-trace/${id}`, 'DELETE')
+export const deleteSkipTraceGroup  = (listKey)   => call(`skip-trace/list/${encodeURIComponent(listKey)}`, 'DELETE')
+export const submitSkipTrace       = (recordIds, traceType = 'advanced') => call('submit-skip-trace', 'POST', { recordIds, traceType })
+export const checkSkipTraceResults = ()          => call('check-skip-trace', 'POST')
+export const submitDncScrub        = (recordIds) => call('scrub-dnc', 'POST', { recordIds })
+
+// ── Admin ────────────────────────────────────────────────────
+export const adminGetUsers       = ()                      => call('admin/users')
+export const adminUpdateUser     = (userId, updates)       => call('admin', 'PATCH', { userId, ...updates })
+export const adminGetUsage       = (start, end) => {
+  const params = new URLSearchParams()
+  if (start) params.set('start', start)
+  if (end)   params.set('end', end)
+  const qs = params.toString()
+  return call(`admin/usage${qs ? `?${qs}` : ''}`)
+}
+export const adminGetMonitor        = ()                      => call('admin/monitor')
+export const adminGetSkipTraceStats     = () => call('admin/skip-trace-stats')
+export const adminCheckSkipTracePending = () => call('admin/check-skip-trace', 'POST')
+export const adminDeleteUser     = (userId)                => call('admin', 'DELETE', { userId })
+export const adminGetUserUsage         = (userId) => call(`admin/user-usage/${userId}`)
+export const adminGetStreetViewQuota   = (start, end) => {
+  const params = new URLSearchParams()
+  if (start) params.set('start', start)
+  if (end)   params.set('end', end)
+  const qs = params.toString()
+  return call(`admin/street-view-quota${qs ? `?${qs}` : ''}`)
+}
+export const adminResetUserCycle = (userId)                => call('admin', 'PATCH', { userId, cycle_anchor_date: new Date().toISOString().slice(0, 10) })
+export const adminSetUserKey     = (userId, key)           => call('admin', 'PATCH', { userId, googleMapsKey: key || null })
+export const adminGrantCredits   = (userId, points) => call('admin', 'PATCH', { userId, grantCredits: points })
+export const adminSetCredits     = (userId, points) => call('admin', 'PATCH', { userId, setCredits: points })
+export const adminGetScanActivity = ()              => call('admin/scan-activity')
