@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { motion, useReducedMotion } from 'motion/react'
+import {
+  EnvelopeIcon,
+  LockIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CircleNotchIcon,
+  ArrowLeftIcon,
+  HouseIcon,
+} from '@phosphor-icons/react'
 import { useAuth } from '../../context/AuthContext'
+
+const EASE = [0.16, 1, 0.3, 1]
 
 function GoogleIcon({ className = '' }) {
   return (
@@ -24,20 +38,51 @@ function DealFinderIQLogo() {
 }
 
 // ── Reusable input ────────────────────────────────────────────
-function Field({ label, type = 'text', value, onChange, placeholder, autoComplete }) {
+function Field({ label, type = 'text', value, onChange, placeholder, autoComplete, icon: Icon, toggle }) {
   return (
     <div>
       <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        required
-        className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-      />
+      <div className="relative">
+        {Icon && (
+          <Icon weight="light" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        )}
+        <input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          required
+          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} ${toggle ? 'pr-10' : 'pr-4'} py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]`}
+        />
+        {toggle}
+      </div>
     </div>
+  )
+}
+
+function PasswordField({ label, value, onChange, placeholder, autoComplete }) {
+  const [show, setShow] = useState(false)
+  return (
+    <Field
+      label={label}
+      type={show ? 'text' : 'password'}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      icon={LockIcon}
+      toggle={
+        <button
+          type="button"
+          onClick={() => setShow(s => !s)}
+          tabIndex={-1}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+        >
+          {show ? <EyeSlashIcon weight="light" className="w-4 h-4" /> : <EyeIcon weight="light" className="w-4 h-4" />}
+        </button>
+      }
+    />
   )
 }
 
@@ -46,9 +91,7 @@ function PendingApprovalScreen({ email, onBack }) {
   return (
     <div className="text-center">
       <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-5">
-        <svg className="w-7 h-7 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <ClockIcon weight="light" className="w-7 h-7 text-amber-400" />
       </div>
       <h2 className="text-xl font-bold text-white mb-2">Account pending approval</h2>
       <p className="text-sm text-slate-400 mb-1">Thanks for signing up,</p>
@@ -60,11 +103,11 @@ function PendingApprovalScreen({ email, onBack }) {
         href="https://api.leadconnectorhq.com/widget/bookings/atlas-set-up-xgrsu"
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-full py-2.5 mb-4 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-lg transition text-sm"
+        className="block w-full py-3 mb-4 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white font-semibold rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm"
       >
         Book your setup call
       </a>
-      <button onClick={onBack} className="text-sm text-brand-400 hover:text-brand-300 transition underline underline-offset-2">
+      <button onClick={onBack} className="text-sm text-brand-400 hover:text-brand-300 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
         Back to sign in
       </button>
     </div>
@@ -90,29 +133,32 @@ function ForgotPasswordScreen({ onBack, resetPassword }) {
 
   if (sent) return (
     <div className="text-center">
-      <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-5">
-        <svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+      <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
+        <CheckCircleIcon weight="light" className="w-7 h-7 text-emerald-400" />
       </div>
       <h2 className="text-xl font-bold text-white mb-2">Email sent</h2>
       <p className="text-sm text-slate-400 mb-8">Check your inbox for a password reset link.</p>
-      <button onClick={onBack} className="text-sm text-brand-400 hover:text-brand-300 transition underline underline-offset-2">Back to sign in</button>
+      <button onClick={onBack} className="text-sm text-brand-400 hover:text-brand-300 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">Back to sign in</button>
     </div>
   )
 
   return (
     <div>
-      <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition mb-6">
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+      <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] mb-6">
+        <ArrowLeftIcon weight="light" className="w-3.5 h-3.5" />
         Back
       </button>
       <h2 className="text-xl font-bold text-white mb-1">Reset password</h2>
       <p className="text-sm text-slate-400 mb-6">Enter your email and we'll send a reset link.</p>
       <form onSubmit={handle} className="space-y-4">
-        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" />
+        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" icon={EnvelopeIcon} />
         {error && <p className="text-xs text-red-400">{error}</p>}
-        <button type="submit" disabled={loading} className="w-full py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold rounded-lg transition text-sm">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] disabled:opacity-50 text-white font-semibold rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm"
+        >
+          {loading && <CircleNotchIcon weight="bold" className="w-4 h-4 animate-spin" />}
           {loading ? 'Sending…' : 'Send reset link'}
         </button>
       </form>
@@ -181,13 +227,13 @@ export default function LoginPage() {
       <DealFinderIQLogo />
 
       {/* Tabs */}
-      <div className="flex bg-slate-800 border border-slate-700 rounded-lg p-1 mb-6">
+      <div className="flex bg-white/5 border border-white/10 rounded-full p-1 mb-6">
         {[['signin', 'Sign In'], ['signup', 'Create Account']].map(([t, label]) => (
           <button
             key={t}
             onClick={() => switchTab(t)}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${
-              tab === t ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            className={`flex-1 py-2 text-sm font-medium rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+              tab === t ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             {label}
@@ -198,7 +244,7 @@ export default function LoginPage() {
       {/* Google button */}
       <button
         onClick={signInWithGoogle}
-        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold px-4 py-2.5 rounded-lg transition text-sm mb-5"
+        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-semibold px-4 py-3 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm mb-5"
       >
         <GoogleIcon className="w-4 h-4" />
         {tab === 'signin' ? 'Sign in with Google' : 'Sign up with Google'}
@@ -206,31 +252,30 @@ export default function LoginPage() {
 
       {/* Divider */}
       <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 h-px bg-slate-700" />
+        <div className="flex-1 h-px bg-white/10" />
         <span className="text-xs text-slate-500">or with email</span>
-        <div className="flex-1 h-px bg-slate-700" />
+        <div className="flex-1 h-px bg-white/10" />
       </div>
 
       {/* Email form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" />
-        <Field
+        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" icon={EnvelopeIcon} />
+        <PasswordField
           label="Password"
-          type="password"
           value={password}
           onChange={setPassword}
           placeholder={tab === 'signup' ? 'Min. 8 characters' : '••••••••'}
           autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
         />
         {tab === 'signup' && (
-          <Field label="Confirm password" type="password" value={confirm} onChange={setConfirm} placeholder="••••••••" autoComplete="new-password" />
+          <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} placeholder="••••••••" autoComplete="new-password" />
         )}
 
         {error && <p className="text-xs text-red-400">{error}</p>}
 
         {tab === 'signin' && (
           <div className="flex justify-end">
-            <button type="button" onClick={() => setScreen('forgot')} className="text-xs text-slate-500 hover:text-brand-400 transition">
+            <button type="button" onClick={() => setScreen('forgot')} className="text-xs text-slate-500 hover:text-brand-400 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
               Forgot password?
             </button>
           </div>
@@ -239,9 +284,10 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold rounded-lg transition text-sm"
+          className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] disabled:opacity-50 text-white font-semibold rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm"
         >
-          {loading ? '…' : tab === 'signin' ? 'Sign In' : 'Create Account'}
+          {loading && <CircleNotchIcon weight="bold" className="w-4 h-4 animate-spin" />}
+          {loading ? '' : tab === 'signin' ? 'Sign In' : 'Create Account'}
         </button>
       </form>
 
@@ -255,23 +301,46 @@ export default function LoginPage() {
 }
 
 function PageShell({ children }) {
+  const reduce = useReducedMotion()
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMjIiIG9wYWNpdHk9IjAuNCI+PHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2MmgwdjJoNHYtMmgydi0yaDR2LTJoLTR6bTAtMzBWMGgtMnY0aC00djJoNHYyaDJ2LTJoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHYtMmgydi0yaDR2LTJINnpNNiA0VjBoLTJ2NEgwdjJoNHYyaDJWNmg0VjRINnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-[0.03] pointer-events-none" />
+    <div className="relative min-h-screen bg-navy-950 flex items-center justify-center px-4 overflow-hidden">
+      <div className="absolute inset-0 bg-grid-dark pointer-events-none" />
+
+      {/* ambient glow orbs */}
+      <motion.div
+        aria-hidden
+        className="absolute -z-0 top-[-10%] left-[10%] w-[26rem] h-[26rem] rounded-full bg-brand-500/20 blur-[110px] pointer-events-none"
+        animate={reduce ? undefined : { x: [0, 40, 0], y: [0, 24, 0], opacity: [0.6, 0.85, 0.6] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        aria-hidden
+        className="absolute -z-0 bottom-[-15%] right-[12%] w-[22rem] h-[22rem] rounded-full bg-emerald-500/10 blur-[110px] pointer-events-none"
+        animate={reduce ? undefined : { x: [0, -30, 0], y: [0, -20, 0], opacity: [0.5, 0.75, 0.5] }}
+        transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+      />
+
       <Link
         to="/"
-        className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition"
+        className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-        </svg>
+        <HouseIcon weight="light" className="w-4 h-4" />
         Home
       </Link>
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-black/40">
-          {children}
+
+      <motion.div
+        className="relative z-10 w-full max-w-sm"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: EASE }}
+      >
+        {/* Double-bezel card */}
+        <div className="bg-white/5 border border-white/10 p-1.5 rounded-[2rem]">
+          <div className="bg-navy-900/80 backdrop-blur-2xl rounded-[calc(2rem-0.375rem)] p-8">
+            {children}
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

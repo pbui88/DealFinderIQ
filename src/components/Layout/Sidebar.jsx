@@ -1,4 +1,13 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
+import {
+  SquaresFourIcon,
+  CreditCardIcon,
+  MagnifyingGlassIcon,
+  GearSixIcon,
+  SignOutIcon,
+  XIcon,
+} from '@phosphor-icons/react'
 import { useAuth } from '../../context/AuthContext'
 
 function NavItem({ to, icon, label }) {
@@ -7,10 +16,10 @@ function NavItem({ to, icon, label }) {
       to={to}
       end={to === '/dashboard'}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+        `flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
           isActive
-            ? 'bg-brand-600/15 text-brand-400 border border-brand-600/25 shadow-sm shadow-brand-600/10'
-            : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'
+            ? 'bg-brand-600/15 text-brand-400 border border-brand-600/25'
+            : 'text-slate-500 border border-transparent hover:text-slate-300 hover:bg-white/[0.04]'
         }`
       }
     >
@@ -35,10 +44,10 @@ function UsageWidget() {
 
   return (
     <div className="px-3 pb-3">
-      <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
+      <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-slate-500">Credits</span>
-          <span className={`text-xs font-bold ${labelColor}`}>
+          <span className={`text-xs font-bold font-mono ${labelColor}`}>
             {remaining.toLocaleString()} left
           </span>
         </div>
@@ -49,27 +58,27 @@ function UsageWidget() {
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-600">
+          <span className="text-xs font-mono text-slate-600">
             {purchasedCreditsUsed.toLocaleString()} used
           </span>
-          <span className="text-xs text-slate-600">
+          <span className="text-xs font-mono text-slate-600">
             {totalCredits.toLocaleString()} total
           </span>
         </div>
         {empty && totalCredits > 0 && (
-          <div className="mt-2 flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 rounded-md px-2 py-1.5">
+          <div className="mt-2 flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 rounded-xl px-2 py-1.5">
             <span className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0" />
             <span className="text-xs text-red-400 font-medium">Credits exhausted</span>
           </div>
         )}
         {empty && totalCredits === 0 && (
-          <div className="mt-2 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-1.5">
+          <div className="mt-2 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2 py-1.5">
             <span className="w-1.5 h-1.5 bg-amber-400 rounded-full shrink-0" />
             <span className="text-xs text-amber-400 font-medium">No credits — contact admin</span>
           </div>
         )}
         {!empty && low && (
-          <div className="mt-2 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-1.5">
+          <div className="mt-2 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2 py-1.5">
             <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse shrink-0" />
             <span className="text-xs text-amber-400 font-medium">{remaining.toLocaleString()} pts remaining</span>
           </div>
@@ -82,6 +91,7 @@ function UsageWidget() {
 export default function Sidebar({ open, onClose }) {
   const { profile, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
+  const shouldReduceMotion = useReducedMotion()
 
   const handleSignOut = async () => {
     await signOut()
@@ -93,17 +103,23 @@ export default function Sidebar({ open, onClose }) {
   return (
     <>
       {/* Backdrop — mobile only */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+            className="fixed inset-0 bg-navy-950/80 backdrop-blur-2xl z-40 lg:hidden"
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
 
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-56 shrink-0
-        border-r border-white/[0.05] flex flex-col h-full
-        transition-transform duration-200 ease-in-out
+        border-r border-white/[0.08] flex flex-col h-full
+        transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${open ? 'translate-x-0' : '-translate-x-full'}
         lg:relative lg:translate-x-0
       `}
@@ -115,21 +131,19 @@ export default function Sidebar({ open, onClose }) {
         }}
       >
         {/* Dark overlay so content remains readable */}
-        <div className="absolute inset-0 bg-navy-950/85 pointer-events-none" />
+        <div className="absolute inset-0 bg-navy-950/85 backdrop-blur-2xl pointer-events-none" />
 
         {/* Close button — mobile only */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition lg:hidden"
+          className="absolute top-3 right-3 z-10 p-1.5 rounded-xl text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all duration-300 active:scale-[0.98] lg:hidden"
           aria-label="Close navigation"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <XIcon className="w-4 h-4" weight="light" />
         </button>
 
         {/* Logo */}
-        <div className="relative z-10 px-4 py-6 border-b border-white/[0.05] flex justify-center">
+        <div className="relative z-10 px-4 py-6 border-b border-white/[0.08] flex justify-center">
           <span className="font-display text-xl font-bold tracking-tight">
             <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
           </span>
@@ -140,39 +154,23 @@ export default function Sidebar({ open, onClose }) {
           <NavItem
             to="/dashboard"
             label="Records"
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-              </svg>
-            }
+            icon={<SquaresFourIcon className="w-4 h-4" weight="light" />}
           />
           <NavItem
             to="/credits"
             label="Credits"
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-              </svg>
-            }
+            icon={<CreditCardIcon className="w-4 h-4" weight="light" />}
           />
           <NavItem
             to="/skiptrace"
             label="Skip Trace"
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-            }
+            icon={<MagnifyingGlassIcon className="w-4 h-4" weight="light" />}
           />
           {isAdmin && (
             <NavItem
               to="/admin"
               label="Admin"
-              icon={
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-                </svg>
-              }
+              icon={<GearSixIcon className="w-4 h-4" weight="light" />}
             />
           )}
         </nav>
@@ -181,7 +179,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="relative z-10"><UsageWidget /></div>
 
         {/* User */}
-        <div className="relative z-10 p-3 border-t border-white/[0.05]">
+        <div className="relative z-10 p-3 border-t border-white/[0.08]">
           <div className="flex items-center gap-2.5 px-2 py-1.5 mb-1.5">
             <div className="w-7 h-7 rounded-full bg-brand-600/20 border border-brand-600/30 flex items-center justify-center shrink-0">
               <span className="text-xs font-bold text-brand-400">{initial}</span>
@@ -195,11 +193,9 @@ export default function Sidebar({ open, onClose }) {
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-white/[0.04] transition"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-300 hover:bg-white/[0.04] transition-all duration-300 active:scale-[0.98]"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-            </svg>
+            <SignOutIcon className="w-3.5 h-3.5" weight="light" />
             Sign out
           </button>
         </div>

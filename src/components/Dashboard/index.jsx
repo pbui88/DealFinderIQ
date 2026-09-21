@@ -1,52 +1,54 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { motion, useReducedMotion } from 'motion/react'
+import { List, Plus, MapPinArea, TrendUp } from '@phosphor-icons/react'
 import { getProjects, deleteProject } from '../../lib/api'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import ProjectCard from './ProjectCard'
 import NewProjectModal from './NewProjectModal'
 
-function Sparkline({ points = '0,20 10,16 20,18 30,10 40,14 50,6 60,10 70,4 80,8', color = '#3b82f6' }) {
-  return (
-    <svg viewBox="0 0 80 24" className="w-16 h-5 opacity-50" preserveAspectRatio="none">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
+const EASE = [0.32, 0.72, 0, 1]
 
-function StatCard({ label, value, sparkColor, sparkPoints, highlight }) {
+function StatCard({ label, value, sparkColor, highlight }) {
   return (
-    <div className="bg-navy-800 border border-white/[0.06] rounded-xl p-5">
+    <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5">
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{label}</p>
       <div className="flex items-end justify-between">
-        <p className={`text-3xl font-bold font-display ${highlight ? 'text-brand-400' : 'text-white'}`}>
+        <p className={`text-3xl font-bold font-display font-mono ${highlight ? 'text-brand-400' : 'text-white'}`}>
           {value}
         </p>
-        <Sparkline color={sparkColor} points={sparkPoints} />
+        <TrendUp weight="light" className="w-6 h-6 opacity-50" style={{ color: sparkColor }} />
       </div>
     </div>
   )
 }
 
-function EmptyState({ onNew }) {
+function EmptyState({ onNew, reduce }) {
   return (
-    <div className="flex flex-col items-center justify-center py-32 text-center">
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: EASE }}
+      className="flex flex-col items-center justify-center py-24 px-8 text-center bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl"
+    >
       <div className="w-16 h-16 rounded-2xl bg-brand-600/10 border border-brand-600/20 flex items-center justify-center mb-5">
-        <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c-.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-        </svg>
+        <MapPinArea weight="light" className="w-8 h-8 text-brand-400" />
       </div>
-      <h3 className="text-base font-semibold text-slate-300 mb-2">No scan projects yet</h3>
-      <p className="text-sm text-slate-600 mb-8 max-w-xs leading-relaxed">
+      <h3 className="text-base font-display font-semibold text-white mb-2">No scan projects yet</h3>
+      <p className="text-sm text-slate-500 mb-8 max-w-xs leading-relaxed">
         Create a project, draw your scan area on the map, and DealFinderIQ will start collecting Street View imagery.
       </p>
-      <button onClick={onNew} className="btn-primary px-6 py-2.5">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
+      <button
+        onClick={onNew}
+        className="inline-flex items-center gap-2 pl-2 pr-5 py-2 rounded-full bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+      >
+        <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+          <Plus weight="bold" className="w-3.5 h-3.5" />
+        </span>
         New List
       </button>
-    </div>
+    </motion.div>
   )
 }
 
@@ -56,6 +58,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([])
   const [loading,  setLoading]  = useState(true)
   const [showNew,  setShowNew]  = useState(false)
+  const reduce = useReducedMotion()
 
   const load = async () => {
     setLoading(true)
@@ -113,12 +116,10 @@ export default function Dashboard() {
         <div className="flex items-start gap-3">
           <button
             onClick={openSidebar}
-            className="mt-1 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition lg:hidden shrink-0"
+            className="mt-1 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition-all duration-300 lg:hidden shrink-0"
             aria-label="Open navigation"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+            <List weight="light" className="w-4 h-4" />
           </button>
           <div>
             <h1 className="text-2xl font-bold font-display text-white">
@@ -127,10 +128,13 @@ export default function Dashboard() {
             <p className="text-sm text-slate-500 mt-1">Manage your neighborhood scan records</p>
           </div>
         </div>
-        <button onClick={() => setShowNew(true)} className="btn-primary shrink-0">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+        <button
+          onClick={() => setShowNew(true)}
+          className="shrink-0 inline-flex items-center gap-2 pl-2 pr-5 py-2 rounded-full bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+        >
+          <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+            <Plus weight="bold" className="w-3.5 h-3.5" />
+          </span>
           New List
         </button>
       </div>
@@ -141,21 +145,18 @@ export default function Dashboard() {
           <StatCard
             label="Total Records"
             value={projects.length}
-            sparkColor="#3b82f6"
-            sparkPoints="0,20 15,18 25,15 40,12 55,10 65,8 80,6"
+            sparkColor="#60a5fa"
           />
           <StatCard
             label="Active Scans"
             value={activeProjects}
             highlight={activeProjects > 0}
-            sparkColor={activeProjects > 0 ? '#06b6d4' : '#475569'}
-            sparkPoints="0,18 10,16 25,14 35,10 50,12 65,8 80,10"
+            sparkColor={activeProjects > 0 ? '#22d3ee' : '#64748b'}
           />
           <StatCard
             label="Properties Scan"
             value={totalPoints.toLocaleString()}
-            sparkColor="#10b981"
-            sparkPoints="0,22 10,18 25,16 35,12 50,10 65,6 80,4"
+            sparkColor="#34d399"
           />
         </div>
       )}
@@ -166,11 +167,18 @@ export default function Dashboard() {
           <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : projects.length === 0 ? (
-        <EmptyState onNew={() => setShowNew(true)} />
+        <EmptyState onNew={() => setShowNew(true)} reduce={reduce} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {projects.map(p => (
-            <ProjectCard key={p.id} project={p} onDelete={handleDelete} />
+          {projects.map((p, i) => (
+            <motion.div
+              key={p.id}
+              initial={reduce ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: i * 0.05, ease: EASE }}
+            >
+              <ProjectCard project={p} onDelete={handleDelete} />
+            </motion.div>
           ))}
         </div>
       )}

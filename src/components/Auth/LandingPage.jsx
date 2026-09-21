@@ -21,28 +21,33 @@ function fadeUp(reduce, delay = 0) {
   }
 }
 
-// ── Nav ───────────────────────────────────────────────────────
+// ── Nav — floating glass island, detached from the top edge ───
 function NavBar({ onSignIn, onGetStarted }) {
   return (
-    <nav className="relative z-10 px-6 sm:px-8 h-16 flex items-center justify-between max-w-7xl mx-auto w-full">
-      <span className="font-display text-xl font-bold tracking-tight">
-        <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
-      </span>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onSignIn}
-          className="text-sm text-slate-400 hover:text-white transition font-medium px-4 py-2 rounded-xl hover:bg-white/[0.05]"
-        >
-          Sign in
-        </button>
-        <button
-          onClick={onGetStarted}
-          className="text-sm bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-xl transition shadow-lg shadow-brand-600/25"
-        >
-          Get started
-        </button>
-      </div>
-    </nav>
+    <div className="sticky top-4 z-40 px-4 sm:px-6">
+      <nav className="max-w-3xl mx-auto flex items-center justify-between gap-4 rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] shadow-[0_8px_32px_rgba(0,0,0,0.35)] pl-5 pr-2 py-2">
+        <span className="font-display text-lg font-bold tracking-tight">
+          <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onSignIn}
+            className="text-sm text-slate-300 hover:text-white transition-colors font-medium px-4 py-2 rounded-full hover:bg-white/[0.06]"
+          >
+            Sign in
+          </button>
+          <button
+            onClick={onGetStarted}
+            className="group flex items-center gap-2 text-sm bg-brand-600 hover:bg-brand-500 text-white font-semibold pl-4 pr-1.5 py-1.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+          >
+            Get started
+            <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-0.5">
+              <ArrowRight weight="bold" className="w-3 h-3" />
+            </span>
+          </button>
+        </div>
+      </nav>
+    </div>
   )
 }
 
@@ -62,7 +67,9 @@ function ScanMap() {
   const flagged = new Set([7, 12, 15])
 
   return (
-    <div className="relative w-full aspect-[4/5] max-w-md rounded-3xl border border-white/[0.08] bg-navy-800/60 overflow-hidden">
+    // Double-bezel: outer glass shell + inner core, like a glass plate in a machined tray
+    <div className="w-full max-w-md rounded-[2rem] bg-white/5 border border-white/10 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+    <div className="relative w-full aspect-[4/5] rounded-[calc(2rem-0.5rem)] bg-navy-800/60 overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
       <div className="absolute inset-0 bg-grid-dark" />
       <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-transparent to-navy-900/40" />
 
@@ -123,6 +130,7 @@ function ScanMap() {
         <span className="text-amber-400/80">3 flagged</span>
       </div>
     </div>
+    </div>
   )
 }
 
@@ -146,14 +154,16 @@ function Hero({ onGetStarted, onSignIn }) {
           <div className="flex items-center gap-3">
             <button
               onClick={onGetStarted}
-              className="group flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold pl-6 pr-5 py-3.5 rounded-xl transition text-sm shadow-xl shadow-brand-600/25"
+              className="group flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold pl-6 pr-2 py-2 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] text-sm shadow-xl shadow-brand-600/25"
             >
               Get started
-              <ArrowRight weight="bold" className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              <span className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-px">
+                <ArrowRight weight="bold" className="w-4 h-4" />
+              </span>
             </button>
             <button
               onClick={onSignIn}
-              className="bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-slate-200 font-semibold px-6 py-3.5 rounded-xl transition text-sm"
+              className="bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-slate-200 font-semibold px-6 py-3.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] text-sm"
             >
               Sign in
             </button>
@@ -318,7 +328,7 @@ function HowItWorks() {
             <motion.div
               key={s.title}
               {...fadeUp(reduce, i * 0.08)}
-              className={`group relative overflow-hidden bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-white/[0.16] hover:bg-white/[0.05] transition-colors ${
+              className={`group relative overflow-hidden bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-[1.75rem] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hover:border-white/[0.16] hover:bg-white/[0.05] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                 s.tall ? 'md:row-span-2' : ''
               }`}
             >
@@ -356,7 +366,7 @@ function HowItWorks() {
 
               <div className="relative z-10 flex flex-col h-full justify-end min-h-[9rem]">
                 <div className="w-10 h-10 bg-white/[0.06] border border-white/[0.08] rounded-xl flex items-center justify-center mb-4 transition-colors group-hover:border-brand-400/40">
-                  <s.icon weight="regular" className="w-5 h-5 text-brand-400" />
+                  <s.icon weight="light" className="w-5 h-5 text-brand-400" />
                 </div>
                 <h3 className="text-base font-semibold text-white mb-1.5">{s.title}</h3>
                 <p className="text-sm text-slate-400 leading-relaxed max-w-xs">{s.desc}</p>
@@ -404,7 +414,7 @@ function FinalCta({ onGetStarted }) {
     <div className="relative z-10 max-w-7xl mx-auto w-full px-6 sm:px-8 pb-20 lg:pb-28">
       <motion.div
         {...fadeUp(reduce)}
-        className="relative overflow-hidden rounded-3xl border border-brand-600/20 bg-gradient-to-br from-brand-600/10 via-navy-800 to-navy-800 px-8 py-14 text-center"
+        className="relative overflow-hidden rounded-[2rem] border border-brand-600/20 bg-gradient-to-br from-brand-600/10 via-navy-800 to-navy-800 px-8 py-14 text-center"
       >
         <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
           Start scanning your first neighborhood.
@@ -412,10 +422,12 @@ function FinalCta({ onGetStarted }) {
         <p className="text-sm text-slate-400 mb-8">Free to create an account. No card required.</p>
         <button
           onClick={onGetStarted}
-          className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold pl-6 pr-5 py-3.5 rounded-xl transition text-sm shadow-xl shadow-brand-600/25"
+          className="group inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold pl-6 pr-2 py-2 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] text-sm shadow-xl shadow-brand-600/25"
         >
           Get started
-          <ArrowRight weight="bold" className="w-4 h-4" />
+          <span className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-px">
+            <ArrowRight weight="bold" className="w-4 h-4" />
+          </span>
         </button>
       </motion.div>
     </div>

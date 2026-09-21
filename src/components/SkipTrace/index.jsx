@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { splitFullAddress } from '../../lib/address'
@@ -12,6 +13,24 @@ import {
   checkSkipTraceResults,
   submitDncScrub,
 } from '../../lib/api'
+import {
+  ListIcon,
+  AddressBookIcon,
+  ArrowsClockwiseIcon,
+  UploadSimpleIcon,
+  CheckCircleIcon,
+  XIcon,
+  WarningCircleIcon,
+  InfoIcon,
+  DownloadSimpleIcon,
+  TrashIcon,
+  CaretRightIcon,
+  ArrowRightIcon,
+  ShieldCheckIcon,
+  UserIcon,
+} from '@phosphor-icons/react'
+
+const EASE = [0.32, 0.72, 0, 1]
 
 // ── CSV parser ────────────────────────────────────────────────
 
@@ -67,14 +86,14 @@ function parseCSV(text) {
 // ── Status badge ──────────────────────────────────────────────
 function StatusBadge({ status }) {
   const cfg = {
-    saved:      { label: 'Saved',      cls: 'bg-slate-700 text-slate-300' },
-    submitted:  { label: 'Submitted',  cls: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
-    processing: { label: 'Processing', cls: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
-    completed:  { label: 'Completed',  cls: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
-    failed:     { label: 'Failed',     cls: 'bg-red-500/20 text-red-400 border border-red-500/30' },
-  }[status] || { label: status, cls: 'bg-slate-700 text-slate-400' }
+    saved:      { label: 'Saved',      cls: 'bg-white/[0.06] text-slate-400 border border-white/[0.08]' },
+    submitted:  { label: 'Submitted',  cls: 'bg-brand-500/15 text-brand-400 border border-brand-500/20' },
+    processing: { label: 'Processing', cls: 'bg-amber-500/15 text-amber-400 border border-amber-500/20' },
+    completed:  { label: 'Completed',  cls: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' },
+    failed:     { label: 'Failed',     cls: 'bg-red-500/15 text-red-400 border border-red-500/20' },
+  }[status] || { label: status, cls: 'bg-white/[0.06] text-slate-500 border border-white/[0.08]' }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.cls}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide font-semibold ${cfg.cls}`}>
       {cfg.label}
     </span>
   )
@@ -85,6 +104,7 @@ export default function SkipTracePage() {
   const { openSidebar } = useOutletContext()
   const { user, usage, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const reduce = useReducedMotion()
 
   const [records,          setRecords]          = useState([])
   const [loading,          setLoading]          = useState(true)
@@ -450,57 +470,51 @@ export default function SkipTracePage() {
   }
 
   return (
-    <div className="min-h-full bg-slate-950">
+    <div className="min-h-full bg-navy-950">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={openSidebar}
-            className="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition lg:hidden shrink-0"
+            className="p-2 rounded-full text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] lg:hidden shrink-0"
             aria-label="Open navigation"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+            <ListIcon weight="light" className="w-5 h-5" />
           </button>
           <div className="flex-1">
             <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-7 h-7 rounded-lg bg-brand-600/20 border border-brand-600/30 flex items-center justify-center text-brand-400">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
+              <div className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/20 flex items-center justify-center text-brand-400">
+                <AddressBookIcon weight="light" className="w-4 h-4" />
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Skip Trace</h1>
+              <h1 className="font-display text-xl sm:text-2xl font-bold text-white tracking-tight">Skip Trace</h1>
             </div>
-            <p className="text-sm text-slate-500">Find property owner contact info — phones, emails &amp; more</p>
+            <p className="text-sm text-slate-400">Find property owner contact info — phones, emails &amp; more</p>
           </div>
 
           {/* Action buttons */}
           <div className="shrink-0 flex items-center gap-2">
             {/* Balance chip — only for non-admins */}
             {!isAdmin && usage && (
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border ${
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${
                 skipTraceBalance <= 0
                   ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                  : 'bg-violet-600/10 border-violet-600/20 text-violet-300'
+                  : 'bg-violet-500/10 border-violet-500/20 text-violet-300'
               }`}>
                 <span className="text-slate-500">Balance:</span>
-                <span className="font-semibold tabular-nums">${skipTraceBalance.toFixed(2)}</span>
+                <span className="font-mono font-semibold tabular-nums">${skipTraceBalance.toFixed(2)}</span>
               </div>
             )}
             {records.some(r => r.status === 'submitted' || r.status === 'processing') && (
               <button
                 onClick={handleCheckResults}
                 disabled={checking}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600/10 border border-emerald-600/25 text-sm text-emerald-400 hover:bg-emerald-600/20 hover:text-emerald-300 transition disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-400 hover:bg-emerald-500/15 hover:text-emerald-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-50"
               >
                 {checking ? (
                   <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                  </svg>
+                  <ArrowsClockwiseIcon weight="light" className="w-4 h-4" />
                 )}
                 Check Results
               </button>
@@ -510,14 +524,12 @@ export default function SkipTracePage() {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/[0.05] border border-white/[0.08] text-sm text-slate-300 hover:text-white hover:bg-white/[0.08] transition disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-sm text-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-50"
             >
               {uploading ? (
                 <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
+                <UploadSimpleIcon weight="light" className="w-4 h-4" />
               )}
               Upload CSV
             </button>
@@ -525,95 +537,139 @@ export default function SkipTracePage() {
         </div>
 
         {/* Banners */}
-        {submitResult?.message && (
-          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3.5 mb-5">
-            <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-            <p className="text-sm text-emerald-300 font-medium flex-1">{submitResult.message}</p>
-            <button onClick={() => setSubmitResult(null)} className="text-emerald-600 hover:text-emerald-400 p-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
-        {submitResult && !submitResult.message && (
-          <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3.5 mb-5">
-            <svg className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-            <div className="flex-1">
-              <p className="text-sm text-emerald-300 font-medium">
-                <span className="font-bold">{submitResult.recordCount} record{submitResult.recordCount !== 1 ? 's' : ''}</span> submitted for skip trace.
-              </p>
-              <p className="text-xs text-emerald-600 mt-0.5">Results will appear here once processing is complete. This typically takes a few minutes.</p>
-              {submitResult.skippedIncomplete > 0 && (
-                <p className="text-xs text-amber-400 mt-1">
-                  {submitResult.skippedIncomplete} record{submitResult.skippedIncomplete !== 1 ? 's' : ''} skipped and left in your saved list —
-                  {submitResult.skippedIncomplete !== 1 ? ' their' : ' its'} address is still missing a state/zip, so we didn't charge for {submitResult.skippedIncomplete !== 1 ? 'them' : 'it'}.
-                  Try submitting again in a bit once the address lookup finishes.
+        <AnimatePresence initial={false}>
+          {submitResult?.message && (
+            <motion.div
+              key="submit-result-msg"
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3.5 mb-5"
+            >
+              <CheckCircleIcon weight="fill" className="w-4 h-4 text-emerald-400 shrink-0" />
+              <p className="text-sm text-emerald-300 font-medium flex-1">{submitResult.message}</p>
+              <button onClick={() => setSubmitResult(null)} className="text-emerald-600 hover:text-emerald-400 p-1 rounded-full transition-all duration-300 active:scale-[0.98]"><XIcon weight="light" className="w-4 h-4" /></button>
+            </motion.div>
+          )}
+          {submitResult && !submitResult.message && (
+            <motion.div
+              key="submit-result-detail"
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3.5 mb-5"
+            >
+              <CheckCircleIcon weight="fill" className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-emerald-300 font-medium">
+                  <span className="font-bold">{submitResult.recordCount} record{submitResult.recordCount !== 1 ? 's' : ''}</span> submitted for skip trace.
                 </p>
+                <p className="text-xs text-emerald-600 mt-0.5">Results will appear here once processing is complete. This typically takes a few minutes.</p>
+                {submitResult.skippedIncomplete > 0 && (
+                  <p className="text-xs text-amber-400 mt-1">
+                    {submitResult.skippedIncomplete} record{submitResult.skippedIncomplete !== 1 ? 's' : ''} skipped and left in your saved list —
+                    {submitResult.skippedIncomplete !== 1 ? ' their' : ' its'} address is still missing a state/zip, so we didn't charge for {submitResult.skippedIncomplete !== 1 ? 'them' : 'it'}.
+                    Try submitting again in a bit once the address lookup finishes.
+                  </p>
+                )}
+              </div>
+              <button onClick={() => setSubmitResult(null)} className="text-emerald-600 hover:text-emerald-400 p-1 rounded-full shrink-0 transition-all duration-300 active:scale-[0.98]"><XIcon weight="light" className="w-4 h-4" /></button>
+            </motion.div>
+          )}
+          {dncSubmitResult?.message && (
+            <motion.div
+              key="dnc-submit-result"
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="flex items-center gap-3 bg-violet-500/10 border border-violet-500/20 rounded-2xl px-4 py-3.5 mb-5"
+            >
+              {dncPolling ? (
+                <span className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin shrink-0" />
+              ) : (
+                <CheckCircleIcon weight="fill" className="w-4 h-4 text-violet-400 shrink-0" />
               )}
-            </div>
-            <button onClick={() => setSubmitResult(null)} className="text-emerald-600 hover:text-emerald-400 p-1 shrink-0"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
-        {dncSubmitResult?.message && (
-          <div className="flex items-center gap-3 bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3.5 mb-5">
-            {dncPolling ? (
-              <span className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin shrink-0" />
-            ) : (
-              <svg className="w-4 h-4 text-violet-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-            )}
-            <p className="text-sm text-violet-300 font-medium flex-1">
-              {dncPolling ? 'DNC scrub in progress — results will appear automatically…' : dncSubmitResult.message}
-            </p>
-            {!dncPolling && (
-              <button onClick={() => setDncSubmitResult(null)} className="text-violet-600 hover:text-violet-400 p-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            )}
-          </div>
-        )}
-        {(submitError || uploadError || dncSubmitError) && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3.5 mb-5">
-            <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-            <p className="text-sm text-red-300 font-medium flex-1">
-              {submitError || uploadError || dncSubmitError}
-              {(submitError || dncSubmitError || '').startsWith('Insufficient') && (
-                <> — <button onClick={() => navigate('/credits')} className="underline hover:text-red-200">Deposit funds →</button></>
+              <p className="text-sm text-violet-300 font-medium flex-1">
+                {dncPolling ? 'DNC scrub in progress — results will appear automatically…' : dncSubmitResult.message}
+              </p>
+              {!dncPolling && (
+                <button onClick={() => setDncSubmitResult(null)} className="text-violet-600 hover:text-violet-400 p-1 rounded-full transition-all duration-300 active:scale-[0.98]"><XIcon weight="light" className="w-4 h-4" /></button>
               )}
-            </p>
-            <button onClick={() => { setSubmitError(null); setUploadError(null); setDncSubmitError(null) }} className="text-red-500 hover:text-red-300 p-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
-        {checkResult && !checkResult.error && (
-          <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3.5 mb-5">
-            <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-            <p className="text-sm text-emerald-300 font-medium flex-1">
-              {checkResult.completed === 0 && !checkResult.dncRecordsUpdated
-                ? 'No completed batches yet — still processing. Try again in a few minutes.'
-                : <>
-                    {checkResult.completed > 0 && <><span className="font-bold">{checkResult.completed} batch{checkResult.completed !== 1 ? 'es' : ''}</span> completed. </>}
-                    {checkResult.recordsUpdated > 0 && <><span className="font-bold">{checkResult.recordsUpdated} record{checkResult.recordsUpdated !== 1 ? 's' : ''}</span> updated with contact info. </>}
-                    {checkResult.dncRecordsUpdated > 0 && <><span className="font-bold">{checkResult.dncRecordsUpdated} record{checkResult.dncRecordsUpdated !== 1 ? 's' : ''}</span> updated with DNC flags.</>}
-                  </>}
-            </p>
-            <button onClick={() => setCheckResult(null)} className="text-emerald-600 hover:text-emerald-400 p-1 shrink-0"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
-        {checkResult?.error && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3.5 mb-5">
-            <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-            <p className="text-sm text-red-300 font-medium flex-1">{checkResult.error}</p>
-            <button onClick={() => setCheckResult(null)} className="text-red-500 hover:text-red-300 p-1"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
+            </motion.div>
+          )}
+          {(submitError || uploadError || dncSubmitError) && (
+            <motion.div
+              key="error-banner"
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3.5 mb-5"
+            >
+              <WarningCircleIcon weight="light" className="w-4 h-4 text-red-400 shrink-0" />
+              <p className="text-sm text-red-300 font-medium flex-1">
+                {submitError || uploadError || dncSubmitError}
+                {(submitError || dncSubmitError || '').startsWith('Insufficient') && (
+                  <> — <button onClick={() => navigate('/credits')} className="underline hover:text-red-200">Deposit funds →</button></>
+                )}
+              </p>
+              <button onClick={() => { setSubmitError(null); setUploadError(null); setDncSubmitError(null) }} className="text-red-500 hover:text-red-300 p-1 rounded-full transition-all duration-300 active:scale-[0.98]"><XIcon weight="light" className="w-4 h-4" /></button>
+            </motion.div>
+          )}
+          {checkResult && !checkResult.error && (
+            <motion.div
+              key="check-result"
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3.5 mb-5"
+            >
+              <CheckCircleIcon weight="fill" className="w-4 h-4 text-emerald-400 shrink-0" />
+              <p className="text-sm text-emerald-300 font-medium flex-1">
+                {checkResult.completed === 0 && !checkResult.dncRecordsUpdated
+                  ? 'No completed batches yet — still processing. Try again in a few minutes.'
+                  : <>
+                      {checkResult.completed > 0 && <><span className="font-bold">{checkResult.completed} batch{checkResult.completed !== 1 ? 'es' : ''}</span> completed. </>}
+                      {checkResult.recordsUpdated > 0 && <><span className="font-bold">{checkResult.recordsUpdated} record{checkResult.recordsUpdated !== 1 ? 's' : ''}</span> updated with contact info. </>}
+                      {checkResult.dncRecordsUpdated > 0 && <><span className="font-bold">{checkResult.dncRecordsUpdated} record{checkResult.dncRecordsUpdated !== 1 ? 's' : ''}</span> updated with DNC flags.</>}
+                    </>}
+              </p>
+              <button onClick={() => setCheckResult(null)} className="text-emerald-600 hover:text-emerald-400 p-1 rounded-full shrink-0 transition-all duration-300 active:scale-[0.98]"><XIcon weight="light" className="w-4 h-4" /></button>
+            </motion.div>
+          )}
+          {checkResult?.error && (
+            <motion.div
+              key="check-result-error"
+              initial={reduce ? false : { opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3.5 mb-5"
+            >
+              <WarningCircleIcon weight="light" className="w-4 h-4 text-red-400 shrink-0" />
+              <p className="text-sm text-red-300 font-medium flex-1">{checkResult.error}</p>
+              <button onClick={() => setCheckResult(null)} className="text-red-500 hover:text-red-300 p-1 rounded-full shrink-0 transition-all duration-300 active:scale-[0.98]"><XIcon weight="light" className="w-4 h-4" /></button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* CSV format hint */}
-        <div className="flex items-start gap-2.5 bg-white/[0.02] border border-white/[0.05] rounded-xl px-4 py-3 mb-6 text-xs text-slate-500">
-          <svg className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+        <div className="flex items-start gap-2.5 bg-white/[0.03] border border-white/[0.06] rounded-2xl px-4 py-3 mb-6 text-xs text-slate-400">
+          <InfoIcon weight="light" className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
           <span>
-            CSV columns: <span className="text-slate-400 font-mono">address</span>, <span className="text-slate-400 font-mono">city</span>, <span className="text-slate-400 font-mono">state</span>, <span className="text-slate-400 font-mono">zip</span>.
-            Only <span className="text-slate-400 font-mono">address</span> is required. The filename becomes the list name.
+            CSV columns: <span className="text-slate-300 font-mono">address</span>, <span className="text-slate-300 font-mono">city</span>, <span className="text-slate-300 font-mono">state</span>, <span className="text-slate-300 font-mono">zip</span>.
+            Only <span className="text-slate-300 font-mono">address</span> is required. The filename becomes the list name.
             Records saved from scan results are grouped by the name you choose when saving.
           </span>
         </div>
 
         {/* Sticky action bar */}
         {(checkedSaved.length > 0 || checkedCompleted.length > 0) && (
-          <div className="sticky top-4 z-10 flex flex-wrap items-center gap-3 bg-slate-900/95 backdrop-blur border border-white/[0.10] rounded-2xl px-5 py-3.5 mb-6 shadow-xl">
+          <div className="sticky top-4 z-10 flex flex-wrap items-center gap-3 bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-5 py-3.5 mb-6">
 
             {/* Download + DNC scrub — completed records */}
             {checkedCompleted.length > 0 && (
@@ -627,22 +683,20 @@ export default function SkipTracePage() {
 
                 <button
                   onClick={() => downloadResults(false)}
-                  className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition shadow-md"
+                  className="shrink-0 flex items-center gap-2 pl-4 pr-2 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                  </svg>
                   {selectedHasDnc ? 'Download All' : 'Download CSV'}
+                  <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+                    <DownloadSimpleIcon weight="light" className="w-3.5 h-3.5" />
+                  </span>
                 </button>
 
                 {selectedHasDnc && (
                   <button
                     onClick={() => downloadResults(true)}
-                    className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700/50 hover:bg-emerald-700/70 border border-emerald-600/40 text-emerald-300 text-sm font-semibold transition"
+                    className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
+                    <DownloadSimpleIcon weight="light" className="w-4 h-4" />
                     Download Clean
                   </button>
                 )}
@@ -651,12 +705,17 @@ export default function SkipTracePage() {
                   <button
                     onClick={() => setShowDncConfirm(true)}
                     disabled={submittingDnc || dncPolling}
-                    className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition shadow-md shadow-violet-600/20 disabled:opacity-50"
+                    className="shrink-0 flex items-center gap-2 pl-4 pr-2 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-50"
                   >
                     {submittingDnc ? (
                       <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Starting…</>
                     ) : (
-                      <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Scrub DNC</>
+                      <>
+                        Scrub DNC
+                        <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+                          <ShieldCheckIcon weight="light" className="w-3.5 h-3.5" />
+                        </span>
+                      </>
                     )}
                   </button>
                 )}
@@ -674,7 +733,7 @@ export default function SkipTracePage() {
                   <p className="text-sm font-semibold text-white">
                     {checkedSaved.length} record{checkedSaved.length !== 1 ? 's' : ''} to trace
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 font-mono">
                     ${(COST_PER_RECORD * checkedSaved.length).toFixed(2)} estimated cost
                   </p>
                 </div>
@@ -682,12 +741,17 @@ export default function SkipTracePage() {
                   <button
                     onClick={() => setShowConfirm(true)}
                     disabled={submitting}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition shadow-md shadow-brand-600/30 disabled:opacity-50"
+                    className="flex items-center gap-2 pl-4 pr-2 py-2 rounded-full bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-50"
                   >
                     {submitting ? (
                       <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Submitting…</>
                     ) : (
-                      <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>Run Skip Trace</>
+                      <>
+                        Run Skip Trace
+                        <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
+                          <ArrowRightIcon weight="light" className="w-3.5 h-3.5" />
+                        </span>
+                      </>
                     )}
                   </button>
                 </div>
@@ -696,12 +760,10 @@ export default function SkipTracePage() {
 
             <button
               onClick={() => setCheckedIds(new Set())}
-              className="shrink-0 p-1.5 rounded-lg text-slate-600 hover:text-slate-300 transition"
+              className="shrink-0 p-1.5 rounded-full text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
               title="Deselect all"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <XIcon weight="light" className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -711,55 +773,57 @@ export default function SkipTracePage() {
           const traceCost = Math.round(COST_PER_RECORD * checkedSaved.length * 100) / 100
           const canAfford = isAdmin || skipTraceBalance >= traceCost
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-              <div className="bg-navy-900 border border-white/[0.08] rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-                <h3 className="text-base font-bold text-white mb-3">Confirm Skip Trace</h3>
-                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 mb-5 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Records</span>
-                    <span className="text-white font-semibold">{checkedSaved.length}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Rate</span>
-                    <span className="text-white font-semibold">$0.08 / record</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Est. Cost</span>
-                    <span className="text-brand-400 font-bold">${traceCost.toFixed(2)}</span>
-                  </div>
-                  {!isAdmin && (
-                    <>
-                      <div className="flex justify-between text-sm pt-1 border-t border-white/[0.06]">
-                        <span className="text-slate-500">Your Balance</span>
-                        <span className={`font-semibold ${canAfford ? 'text-white' : 'text-red-400'}`}>
-                          ${skipTraceBalance.toFixed(2)}
-                        </span>
-                      </div>
-                      {canAfford ? (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-500">After this job</span>
-                          <span className="text-slate-300 font-semibold">${(skipTraceBalance - traceCost).toFixed(2)}</span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+              <div className="bg-white/5 border border-white/10 p-1.5 rounded-[1.75rem] max-w-sm w-full">
+                <div className="bg-navy-900 rounded-[calc(1.75rem-0.375rem)] p-6">
+                  <h3 className="font-display text-base font-bold text-white mb-3">Confirm Skip Trace</h3>
+                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 mb-5 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Records</span>
+                      <span className="text-white font-semibold font-mono">{checkedSaved.length}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Rate</span>
+                      <span className="text-white font-semibold font-mono">$0.08 / record</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Est. Cost</span>
+                      <span className="text-brand-400 font-bold font-mono">${traceCost.toFixed(2)}</span>
+                    </div>
+                    {!isAdmin && (
+                      <>
+                        <div className="flex justify-between text-sm pt-1 border-t border-white/[0.06]">
+                          <span className="text-slate-500">Your Balance</span>
+                          <span className={`font-semibold font-mono ${canAfford ? 'text-white' : 'text-red-400'}`}>
+                            ${skipTraceBalance.toFixed(2)}
+                          </span>
                         </div>
-                      ) : (
-                        <div className="pt-1">
-                          <p className="text-xs text-red-400">
-                            Insufficient funds — you need ${(traceCost - skipTraceBalance).toFixed(2)} more.{' '}
-                            <button onClick={() => { setShowConfirm(false); navigate('/credits') }} className="underline hover:text-red-300">Deposit funds →</button>
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <div className="pt-1 border-t border-white/[0.06]">
-                    <p className="text-[11px] text-slate-600">
-                      Returns owner name, phones &amp; emails. Charged per matched record only — no charge on misses.
-                      After results arrive, you can optionally run DNC scrub on the completed records.
-                    </p>
+                        {canAfford ? (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">After this job</span>
+                            <span className="text-slate-300 font-semibold font-mono">${(skipTraceBalance - traceCost).toFixed(2)}</span>
+                          </div>
+                        ) : (
+                          <div className="pt-1">
+                            <p className="text-xs text-red-400">
+                              Insufficient funds — you need ${(traceCost - skipTraceBalance).toFixed(2)} more.{' '}
+                              <button onClick={() => { setShowConfirm(false); navigate('/credits') }} className="underline hover:text-red-300">Deposit funds →</button>
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div className="pt-1 border-t border-white/[0.06]">
+                      <p className="text-[11px] text-slate-500">
+                        Returns owner name, phones &amp; emails. Charged per matched record only — no charge on misses.
+                        After results arrive, you can optionally run DNC scrub on the completed records.
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.05] text-sm font-medium transition">Cancel</button>
-                  <button onClick={handleSubmit} disabled={!canAfford} className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition shadow-md shadow-brand-600/30">Confirm</button>
+                  <div className="flex gap-3">
+                    <button onClick={() => setShowConfirm(false)} className="flex-1 py-2.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">Cancel</button>
+                    <button onClick={handleSubmit} disabled={!canAfford} className="flex-1 py-2.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">Confirm</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -771,55 +835,57 @@ export default function SkipTracePage() {
           const dncCost    = Math.round(totalPhonesForDnc * 0.02 * 100) / 100
           const canAfford  = isAdmin || skipTraceBalance >= dncCost
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-              <div className="bg-navy-900 border border-white/[0.08] rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-                <h3 className="text-base font-bold text-white mb-1">Confirm DNC Scrub</h3>
-                <p className="text-xs text-slate-500 mb-2">Checks phone numbers against these databases:</p>
-                <div className="space-y-2 mb-4">
-                  <DncInfoRow label="National DNC" info="Federal Do Not Call Registry managed by the FTC. Calling registered numbers without consent risks fines up to $51,744 per violation." />
-                  <DncInfoRow label="State DNC" info="State-level Do Not Call registries. These may include numbers not on the federal list; rules and penalties vary by state." />
-                  <DncInfoRow label="DMA" info="Direct Marketing Association Telephone Preference Service — an industry opt-out list for consumers who have requested no telemarketing calls." />
-                  <DncInfoRow label="Litigator" info="Known TCPA serial litigators who have previously filed or threatened lawsuits for unsolicited calls. Contacting these numbers carries significant legal risk." />
-                </div>
-                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 mb-5 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Records</span>
-                    <span className="text-white font-semibold">{dncCandidates.length}</span>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+              <div className="bg-white/5 border border-white/10 p-1.5 rounded-[1.75rem] max-w-sm w-full">
+                <div className="bg-navy-900 rounded-[calc(1.75rem-0.375rem)] p-6">
+                  <h3 className="font-display text-base font-bold text-white mb-1">Confirm DNC Scrub</h3>
+                  <p className="text-xs text-slate-500 mb-2">Checks phone numbers against these databases:</p>
+                  <div className="space-y-2 mb-4">
+                    <DncInfoRow label="National DNC" info="Federal Do Not Call Registry managed by the FTC. Calling registered numbers without consent risks fines up to $51,744 per violation." />
+                    <DncInfoRow label="State DNC" info="State-level Do Not Call registries. These may include numbers not on the federal list; rules and penalties vary by state." />
+                    <DncInfoRow label="DMA" info="Direct Marketing Association Telephone Preference Service — an industry opt-out list for consumers who have requested no telemarketing calls." />
+                    <DncInfoRow label="Litigator" info="Known TCPA serial litigators who have previously filed or threatened lawsuits for unsolicited calls. Contacting these numbers carries significant legal risk." />
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Phones to check</span>
-                    <span className="text-white font-semibold">{totalPhonesForDnc}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Rate</span>
-                    <span className="text-white font-semibold">$0.02 / phone</span>
-                  </div>
-                  <div className="flex justify-between text-sm pt-1 border-t border-white/[0.06]">
-                    <span className="text-slate-500">Est. Cost</span>
-                    <span className="text-violet-400 font-bold">${dncCost.toFixed(2)} <span className="text-slate-600 font-normal text-[10px]">max</span></span>
-                  </div>
-                  {!isAdmin && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Your Balance</span>
-                        <span className={`font-semibold ${canAfford ? 'text-white' : 'text-red-400'}`}>
-                          ${skipTraceBalance.toFixed(2)}
-                        </span>
-                      </div>
-                      {!canAfford && (
-                        <div className="pt-1">
-                          <p className="text-xs text-red-400">
-                            Insufficient funds — you need ${(dncCost - skipTraceBalance).toFixed(2)} more.{' '}
-                            <button onClick={() => { setShowDncConfirm(false); navigate('/credits') }} className="underline hover:text-red-300">Deposit funds →</button>
-                          </p>
+                  <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 mb-5 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Records</span>
+                      <span className="text-white font-semibold font-mono">{dncCandidates.length}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Phones to check</span>
+                      <span className="text-white font-semibold font-mono">{totalPhonesForDnc}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Rate</span>
+                      <span className="text-white font-semibold font-mono">$0.02 / phone</span>
+                    </div>
+                    <div className="flex justify-between text-sm pt-1 border-t border-white/[0.06]">
+                      <span className="text-slate-500">Est. Cost</span>
+                      <span className="text-violet-400 font-bold font-mono">${dncCost.toFixed(2)} <span className="text-slate-600 font-normal text-[10px]">max</span></span>
+                    </div>
+                    {!isAdmin && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-500">Your Balance</span>
+                          <span className={`font-semibold font-mono ${canAfford ? 'text-white' : 'text-red-400'}`}>
+                            ${skipTraceBalance.toFixed(2)}
+                          </span>
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowDncConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.05] text-sm font-medium transition">Cancel</button>
-                  <button onClick={handleScrubDnc} disabled={!canAfford} className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition shadow-md shadow-violet-600/30">Confirm</button>
+                        {!canAfford && (
+                          <div className="pt-1">
+                            <p className="text-xs text-red-400">
+                              Insufficient funds — you need ${(dncCost - skipTraceBalance).toFixed(2)} more.{' '}
+                              <button onClick={() => { setShowDncConfirm(false); navigate('/credits') }} className="underline hover:text-red-300">Deposit funds →</button>
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setShowDncConfirm(false)} className="flex-1 py-2.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">Cancel</button>
+                    <button onClick={handleScrubDnc} disabled={!canAfford} className="flex-1 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">Confirm</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -834,7 +900,7 @@ export default function SkipTracePage() {
         ) : error ? (
           <div className="text-center py-20">
             <p className="text-red-400 text-sm mb-3">{error}</p>
-            <button onClick={load} className="text-xs text-brand-600 hover:underline">Retry</button>
+            <button onClick={load} className="text-xs text-brand-400 hover:underline">Retry</button>
           </div>
         ) : records.length === 0 ? (
           <EmptyState />
@@ -848,7 +914,7 @@ export default function SkipTracePage() {
               const isDeletingThis   = deletingGroup === group.key
 
               return (
-                <div key={group.key} className="bg-slate-900/50 border border-white/[0.06] rounded-2xl overflow-hidden">
+                <div key={group.key} className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl overflow-hidden">
                   {/* Group header */}
                   <div className="px-4 py-3 flex items-center gap-3">
                     {selectable.length > 0 && (
@@ -857,7 +923,7 @@ export default function SkipTracePage() {
                         checked={allGroupChecked}
                         ref={el => { if (el) el.indeterminate = someGroupChecked && !allGroupChecked }}
                         onChange={() => toggleGroupAll(group)}
-                        className="accent-brand-600 cursor-pointer shrink-0"
+                        className="accent-brand-600 cursor-pointer shrink-0 w-4 h-4"
                         title={allGroupChecked ? 'Deselect all in list' : 'Select all in list'}
                       />
                     )}
@@ -866,23 +932,21 @@ export default function SkipTracePage() {
                       onClick={() => toggleGroupExpand(group.key)}
                       className="flex-1 flex items-center gap-2.5 text-left min-w-0"
                     >
-                      <svg
-                        className={`w-3.5 h-3.5 text-slate-500 shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
+                      <CaretRightIcon
+                        weight="bold"
+                        className={`w-3.5 h-3.5 text-slate-500 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${isExpanded ? 'rotate-90' : ''}`}
+                      />
                       <span className="text-sm font-semibold text-white truncate">{group.name}</span>
                       <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-                        <span className="text-[10px] text-slate-600">{group.records.length} record{group.records.length !== 1 ? 's' : ''}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">{group.records.length} record{group.records.length !== 1 ? 's' : ''}</span>
                         {group.savedCount > 0 && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-700/80 text-slate-300 font-medium">{group.savedCount} ready</span>
+                          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-white/[0.06] text-slate-400 border border-white/[0.08] font-semibold">{group.savedCount} ready</span>
                         )}
                         {group.submittedCount > 0 && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-medium">{group.submittedCount} processing</span>
+                          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-400 border border-brand-500/20 font-semibold">{group.submittedCount} processing</span>
                         )}
                         {group.completedCount > 0 && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-medium">{group.completedCount} done</span>
+                          <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-semibold">{group.completedCount} done</span>
                         )}
                       </div>
                     </button>
@@ -890,35 +954,49 @@ export default function SkipTracePage() {
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDeleteGroup(group) }}
                       disabled={isDeletingThis}
-                      className="shrink-0 p-1.5 rounded-lg text-slate-600 hover:text-red-400 transition disabled:opacity-40"
+                      className="shrink-0 p-1.5 rounded-full text-slate-500 hover:text-red-400 hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-40"
                       title="Delete this list"
                     >
                       {isDeletingThis
                         ? <span className="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin block" />
-                        : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>}
+                        : <TrashIcon weight="light" className="w-3.5 h-3.5" />}
                     </button>
                   </div>
 
-                  {isExpanded && (
-                    <div className="border-t border-white/[0.05] divide-y divide-white/[0.04]">
-                      {group.records.map(record => (
-                        <RecordRow
-                          key={record.id}
-                          record={record}
-                          checked={checkedIds.has(record.id)}
-                          onCheck={toggleCheck}
-                          onDelete={handleDelete}
-                          deletingId={deletingId}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        key="group-body"
+                        initial={reduce ? false : { height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: EASE }}
+                        className="overflow-hidden"
+                      >
+                        <div className="border-t border-white/[0.05] divide-y divide-white/[0.04]">
+                          {group.records.map(record => (
+                            <RecordRow
+                              key={record.id}
+                              record={record}
+                              checked={checkedIds.has(record.id)}
+                              onCheck={toggleCheck}
+                              onDelete={handleDelete}
+                              deletingId={deletingId}
+                            />
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )
             })}
 
             <div className="text-center">
-              <button onClick={load} className="text-xs text-slate-600 hover:text-slate-400 transition">↺ Refresh all</button>
+              <button onClick={load} className="flex items-center gap-1.5 mx-auto text-xs text-slate-500 hover:text-slate-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]">
+                <ArrowsClockwiseIcon weight="light" className="w-3.5 h-3.5" />
+                Refresh all
+              </button>
             </div>
           </div>
         )}
@@ -932,13 +1010,13 @@ function DncInfoRow({ label, info }) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
         <span className="text-xs text-slate-300 flex-1">{label}</span>
         <button
           onClick={() => setOpen(v => !v)}
           title={open ? 'Hide info' : 'What is this?'}
-          className={`w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center transition shrink-0
-            ${open ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'}`}
+          className={`w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] shrink-0
+            ${open ? 'bg-violet-600 text-white' : 'bg-white/[0.08] text-slate-400 hover:bg-white/[0.14] hover:text-white'}`}
         >?</button>
       </div>
       {open && (
@@ -955,10 +1033,10 @@ function RecordRow({ record, checked, onCheck, onDelete, deletingId }) {
   const isDeleting   = deletingId === record.id
 
   return (
-    <div className={`flex items-start gap-3 px-4 py-3 transition-colors ${checked ? 'bg-brand-600/5' : 'hover:bg-white/[0.02]'}`}>
+    <div className={`flex items-start gap-3 px-4 py-3 transition-colors duration-300 ${checked ? 'bg-brand-600/5' : 'hover:bg-white/[0.02]'}`}>
       <div className="shrink-0 pt-0.5 w-4">
         {isSelectable
-          ? <input type="checkbox" checked={checked} onChange={() => onCheck(record.id)} className="accent-brand-600 cursor-pointer" />
+          ? <input type="checkbox" checked={checked} onChange={() => onCheck(record.id)} className="accent-brand-600 cursor-pointer w-4 h-4" />
           : <span />}
       </div>
 
@@ -969,7 +1047,7 @@ function RecordRow({ record, checked, onCheck, onDelete, deletingId }) {
             : <span className="text-slate-500 italic">No address</span>}
         </p>
         <div className="flex items-center gap-1 mt-0.5">
-          <span className="text-[10px] text-slate-700">{new Date(record.created_at).toLocaleDateString()}</span>
+          <span className="text-[10px] text-slate-600 font-mono">{new Date(record.created_at).toLocaleDateString()}</span>
         </div>
         {record.status === 'completed' && (
           record.result
@@ -984,15 +1062,13 @@ function RecordRow({ record, checked, onCheck, onDelete, deletingId }) {
           <button
             onClick={() => onDelete(record.id)}
             disabled={isDeleting}
-            className="p-1 rounded text-slate-600 hover:text-red-400 transition disabled:opacity-40"
+            className="p-1 rounded-full text-slate-500 hover:text-red-400 hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-40"
             title="Remove"
           >
             {isDeleting ? (
               <span className="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin block" />
             ) : (
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-              </svg>
+              <TrashIcon weight="light" className="w-3.5 h-3.5" />
             )}
           </button>
         )}
@@ -1002,15 +1078,15 @@ function RecordRow({ record, checked, onCheck, onDelete, deletingId }) {
 }
 
 function PhoneTag({ type }) {
-  if (type === 'primary')  return <span className="text-[10px] font-semibold text-emerald-400 border border-emerald-500/40 rounded px-1.5 py-0.5">Primary</span>
-  if (type === 'landline') return <span className="text-[10px] font-semibold text-slate-400 border border-slate-600 rounded px-1.5 py-0.5">Landline</span>
-  return                          <span className="text-[10px] font-semibold text-blue-400 border border-blue-500/40 rounded px-1.5 py-0.5">Mobile</span>
+  if (type === 'primary')  return <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 rounded-full px-1.5 py-0.5">Primary</span>
+  if (type === 'landline') return <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 border border-white/10 bg-white/5 rounded-full px-1.5 py-0.5">Landline</span>
+  return                          <span className="text-[10px] font-semibold uppercase tracking-wide text-brand-400 border border-brand-500/30 bg-brand-500/10 rounded-full px-1.5 py-0.5">Mobile</span>
 }
 
 function DncFlag({ value }) {
-  if (value === true)      return <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">Y</span>
-  if (value === false)     return <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-500">N</span>
-  return                          <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-600">–</span>
+  if (value === true)      return <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20">Y</span>
+  if (value === false)     return <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/[0.06] text-slate-500 border border-white/[0.08]">N</span>
+  return                          <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/[0.03] text-slate-600 border border-white/[0.05]">–</span>
 }
 
 const CSV_HEADER = ['List Name','Address','City','State','Zip','Owner Name','Primary Phone','Mobile 1','Mobile 2','Mobile 3','Landline 1','Landline 2','Email 1','Email 2','Email 3']
@@ -1069,26 +1145,22 @@ function ContactResult({ result, record }) {
     <div className="mt-3 space-y-2.5">
 
       {/* ── Skip Trace Result card ──────────────────────────────── */}
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
+      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3">
         <div className="flex items-center justify-between mb-2.5">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Skip Trace Result</span>
           <button
             onClick={downloadSkipTrace}
-            className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition"
+            className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
             title="Download this record as CSV"
           >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
+            <DownloadSimpleIcon weight="light" className="w-3 h-3" />
             Download Skip Trace Result
           </button>
         </div>
 
         {result.full_name && (
           <div className="flex items-center gap-1.5 mb-2.5">
-            <svg className="w-3 h-3 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-            </svg>
+            <UserIcon weight="light" className="w-3 h-3 text-slate-500 shrink-0" />
             <span className="text-xs font-semibold text-slate-200">{result.full_name}</span>
           </div>
         )}
@@ -1123,37 +1195,35 @@ function ContactResult({ result, record }) {
 
       {/* ── DNC Scrub Result card ───────────────────────────────── */}
       {dncScrubbed && (
-        <div className="bg-white/[0.02] border border-violet-500/15 rounded-xl p-3">
+        <div className="bg-white/[0.03] border border-violet-500/20 rounded-xl p-3">
           {/* Header */}
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block" />
+              <ShieldCheckIcon weight="light" className="w-3.5 h-3.5 text-violet-400 shrink-0" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">DNC Scrub Result</span>
             </div>
             <button
               onClick={downloadClean}
-              className="flex items-center gap-1 text-[10px] text-violet-500 hover:text-violet-300 transition"
+              className="flex items-center gap-1 text-[10px] text-violet-400 hover:text-violet-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
               title="Download clean numbers only"
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
+              <DownloadSimpleIcon weight="light" className="w-3 h-3" />
               Download Clean
             </button>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-6 mb-3 pb-3 border-b border-white/[0.04]">
+          <div className="flex items-center gap-6 mb-3 pb-3 border-b border-white/[0.06]">
             <div>
-              <p className="text-lg font-bold text-white leading-none">{phones.length}</p>
+              <p className="text-lg font-bold text-white leading-none font-mono">{phones.length}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Checked</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-emerald-400 leading-none">{cleanPhones.length}</p>
+              <p className="text-lg font-bold text-emerald-400 leading-none font-mono">{cleanPhones.length}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Clean (No Flags)</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-red-400 leading-none">{flaggedCount}</p>
+              <p className="text-lg font-bold text-red-400 leading-none font-mono">{flaggedCount}</p>
               <p className="text-[10px] text-slate-500 mt-0.5">Flagged</p>
             </div>
           </div>
@@ -1197,13 +1267,11 @@ function ContactResult({ result, record }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-brand-600/10 border border-brand-600/20 flex items-center justify-center mb-4">
-        <svg className="w-7 h-7 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-        </svg>
+      <div className="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4">
+        <AddressBookIcon weight="light" className="w-7 h-7 text-brand-400" />
       </div>
-      <h3 className="text-base font-semibold text-white mb-2">No skip trace records yet</h3>
-      <p className="text-sm text-slate-500 max-w-xs">
+      <h3 className="font-display text-base font-semibold text-white mb-2">No skip trace records yet</h3>
+      <p className="text-sm text-slate-400 max-w-xs">
         Save properties from your scan results or upload a CSV to get started.
       </p>
     </div>

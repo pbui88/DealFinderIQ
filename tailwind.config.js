@@ -4,11 +4,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans:    ['Inter', 'system-ui', 'sans-serif'],
-        display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-        // Minimalist workspace theme (pilot: ResultsTab) — kept separate from
-        // sans/display above so unconverted dark pages are unaffected.
-        ui:      ['Manrope', 'system-ui', 'sans-serif'],
+        // App-wide default body/UI font. Was Inter — Manrope is a Geist-adjacent
+        // geometric grotesk, confirmed available via the Google Fonts link below.
+        sans:    ['Manrope', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'Manrope', 'sans-serif'],
+        ui:      ['Manrope', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         mono:    ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {

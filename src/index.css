@@ -5,7 +5,7 @@
 @layer base {
   body {
     @apply bg-navy-900 text-slate-200 antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Manrope', 'Plus Jakarta Sans', system-ui, sans-serif;
   }
   ::-webkit-scrollbar        { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track  { @apply bg-navy-800; }

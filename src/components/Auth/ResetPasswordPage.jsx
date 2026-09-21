@@ -1,26 +1,50 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { motion, useReducedMotion } from 'motion/react'
+import {
+  LockIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  CheckCircleIcon,
+  CircleNotchIcon,
+  ArrowLeftIcon,
+} from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 
+const EASE = [0.16, 1, 0.3, 1]
+
 function Field({ label, value, onChange, placeholder, autoComplete }) {
+  const [show, setShow] = useState(false)
   return (
     <div>
       <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
-      <input
-        type="password"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        required
-        className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
-      />
+      <div className="relative">
+        <LockIcon weight="light" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          required
+          className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        />
+        <button
+          type="button"
+          onClick={() => setShow(s => !s)}
+          tabIndex={-1}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+        >
+          {show ? <EyeSlashIcon weight="light" className="w-4 h-4" /> : <EyeIcon weight="light" className="w-4 h-4" />}
+        </button>
+      </div>
     </div>
   )
 }
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
+  const reduce = useReducedMotion()
   const [ready,    setReady]    = useState(false)
   const [invalid,  setInvalid]  = useState(false)
   const [password, setPassword] = useState('')
@@ -63,57 +87,81 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMjIiIG9wYWNpdHk9IjAuNCI+PHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2MmgwdjJoNHYtMmgydi0yaDR2LTJoLTR6bTAtMzBWMGgtMnY0aC00djJoNHYyaDJ2LTJoNFY0aC00ek02IDM0di00SDR2NGgwdjJoNHYtMmgydi0yaDR2LTJINnpNNiA0VjBoLTJ2NEgwdjJoNHYyaDJWNmg0VjRINnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-[0.03] pointer-events-none" />
-      <Link to="/login" className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-        </svg>
+    <div className="relative min-h-screen bg-navy-950 flex items-center justify-center px-4 overflow-hidden">
+      <div className="absolute inset-0 bg-grid-dark pointer-events-none" />
+
+      {/* ambient glow orbs */}
+      <motion.div
+        aria-hidden
+        className="absolute -z-0 top-[-10%] left-[10%] w-[26rem] h-[26rem] rounded-full bg-brand-500/20 blur-[110px] pointer-events-none"
+        animate={reduce ? undefined : { x: [0, 40, 0], y: [0, 24, 0], opacity: [0.6, 0.85, 0.6] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        aria-hidden
+        className="absolute -z-0 bottom-[-15%] right-[12%] w-[22rem] h-[22rem] rounded-full bg-emerald-500/10 blur-[110px] pointer-events-none"
+        animate={reduce ? undefined : { x: [0, -30, 0], y: [0, -20, 0], opacity: [0.5, 0.75, 0.5] }}
+        transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+      />
+
+      <Link to="/login" className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+        <ArrowLeftIcon weight="light" className="w-4 h-4" />
         Back to sign in
       </Link>
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-black/40">
-          {invalid ? (
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-white mb-2">Link expired</h2>
-              <p className="text-sm text-slate-400 mb-6">This password reset link is invalid or has expired. Request a new one from the sign-in page.</p>
-              <button onClick={() => navigate('/login')} className="text-sm text-brand-400 hover:text-brand-300 transition underline underline-offset-2">
-                Back to sign in
-              </button>
-            </div>
-          ) : done ? (
-            <div className="text-center">
-              <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-5">
-                <svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Password updated</h2>
-              <p className="text-sm text-slate-400 mb-8">You can now sign in with your new password.</p>
-              <button onClick={() => navigate('/dashboard')} className="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-lg transition text-sm">
-                Continue to DealFinderIQ
-              </button>
-            </div>
-          ) : !ready ? (
-            <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
-            <div>
-              <h2 className="text-xl font-bold text-white mb-1">Set a new password</h2>
-              <p className="text-sm text-slate-400 mb-6">Choose a new password for your account.</p>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <Field label="New password" value={password} onChange={setPassword} placeholder="Min. 8 characters" autoComplete="new-password" />
-                <Field label="Confirm password" value={confirm} onChange={setConfirm} placeholder="••••••••" autoComplete="new-password" />
-                {error && <p className="text-xs text-red-400">{error}</p>}
-                <button type="submit" disabled={loading} className="w-full py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold rounded-lg transition text-sm">
-                  {loading ? '…' : 'Update password'}
+
+      <motion.div
+        className="relative z-10 w-full max-w-sm"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: EASE }}
+      >
+        <div className="bg-white/5 border border-white/10 p-1.5 rounded-[2rem]">
+          <div className="bg-navy-900/80 backdrop-blur-2xl rounded-[calc(2rem-0.375rem)] p-8">
+            {invalid ? (
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-white mb-2">Link expired</h2>
+                <p className="text-sm text-slate-400 mb-6">This password reset link is invalid or has expired. Request a new one from the sign-in page.</p>
+                <button onClick={() => navigate('/login')} className="text-sm text-brand-400 hover:text-brand-300 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                  Back to sign in
                 </button>
-              </form>
-            </div>
-          )}
+              </div>
+            ) : done ? (
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
+                  <CheckCircleIcon weight="light" className="w-7 h-7 text-emerald-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">Password updated</h2>
+                <p className="text-sm text-slate-400 mb-8">You can now sign in with your new password.</p>
+                <button onClick={() => navigate('/dashboard')} className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white font-semibold rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm">
+                  Continue to DealFinderIQ
+                </button>
+              </div>
+            ) : !ready ? (
+              <div className="flex justify-center py-8">
+                <CircleNotchIcon weight="bold" className="w-8 h-8 text-brand-500 animate-spin" />
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-xl font-bold text-white mb-1">Set a new password</h2>
+                <p className="text-sm text-slate-400 mb-6">Choose a new password for your account.</p>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Field label="New password" value={password} onChange={setPassword} placeholder="Min. 8 characters" autoComplete="new-password" />
+                  <Field label="Confirm password" value={confirm} onChange={setConfirm} placeholder="••••••••" autoComplete="new-password" />
+                  {error && <p className="text-xs text-red-400">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] disabled:opacity-50 text-white font-semibold rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm"
+                  >
+                    {loading && <CircleNotchIcon weight="bold" className="w-4 h-4 animate-spin" />}
+                    {loading ? '' : 'Update password'}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

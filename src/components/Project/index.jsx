@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom'
 import { useJsApiLoader } from '@react-google-maps/api'
+import { motion, useReducedMotion } from 'motion/react'
+import {
+  MapTrifoldIcon,
+  ChartBarIcon,
+  ListIcon,
+  ArrowLeftIcon,
+  CircleNotchIcon,
+} from '@phosphor-icons/react'
 import { supabase } from '../../lib/supabase'
 import { updateProject } from '../../lib/api'
 import { STATUS_LABELS, STATUS_BADGE_CLASS } from '../../lib/constants'
@@ -9,31 +17,18 @@ import ResultsTab from './ResultsTab'
 
 const LIBRARIES = ['geometry']
 
+const EASE = [0.32, 0.72, 0, 1]
+
 const TABS = [
-  {
-    id: 'map',
-    label: 'Map',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c-.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'results',
-    label: 'Results',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-      </svg>
-    ),
-  },
+  { id: 'map',     label: 'Map',     icon: MapTrifoldIcon },
+  { id: 'results', label: 'Results', icon: ChartBarIcon },
 ]
 
 export default function ProjectPage() {
   const { openSidebar } = useOutletContext()
   const { id } = useParams()
   const navigate = useNavigate()
+  const reduceMotion = useReducedMotion()
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY || '',
     libraries: LIBRARIES,
@@ -89,7 +84,7 @@ export default function ProjectPage() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-navy-900">
-        <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <CircleNotchIcon weight="light" className="w-6 h-6 text-brand-500 animate-spin" />
       </div>
     )
   }
@@ -102,17 +97,13 @@ export default function ProjectPage() {
       <header className="flex items-center gap-3 px-3 sm:px-5 py-3 border-b border-white/[0.06] shrink-0 bg-navy-950">
         <button
           onClick={openSidebar}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition lg:hidden shrink-0"
+          className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition active:scale-[0.98] lg:hidden shrink-0"
           aria-label="Open navigation"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
+          <ListIcon weight="light" className="w-4 h-4" />
         </button>
         <Link to="/dashboard" className="text-slate-500 hover:text-slate-200 transition shrink-0">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
+          <ArrowLeftIcon weight="light" className="w-4 h-4" />
         </Link>
 
         <div className="flex-1 min-w-0">
@@ -135,26 +126,44 @@ export default function ProjectPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center bg-navy-800 border border-white/[0.06] rounded-lg p-0.5 gap-0.5">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'bg-brand-600/20 text-brand-400 border border-brand-600/25'
-                  : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        <div className="relative flex items-center bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full p-1 gap-0.5">
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-display font-medium
+                  transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]
+                  ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+              >
+                {isActive && (
+                  reduceMotion ? (
+                    <span className="absolute inset-0 -z-10 bg-brand-600 rounded-full" />
+                  ) : (
+                    <motion.span
+                      layoutId="project-tab-highlight"
+                      className="absolute inset-0 -z-10 bg-brand-600 rounded-full"
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    />
+                  )
+                )}
+                <tab.icon weight="light" className="w-3.5 h-3.5 relative z-10" />
+                <span className="relative z-10">{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
       </header>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-hidden">
+      <motion.div
+        key={activeTab}
+        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: EASE }}
+        className="flex-1 overflow-hidden"
+      >
         {activeTab === 'map' && (
           <MapTab
             project={project}
@@ -178,7 +187,7 @@ export default function ProjectPage() {
             onAutoStartConsumed={() => setAutoStartScan(false)}
           />
         )}
-      </div>
+      </motion.div>
     </div>
   )
 }

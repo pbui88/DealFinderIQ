@@ -1,10 +1,35 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { GoogleMap, Polygon, Polyline, Marker } from '@react-google-maps/api'
 import * as turf from '@turf/turf'
+import { motion, useReducedMotion } from 'motion/react'
+import {
+  MagnifyingGlassIcon,
+  XIcon,
+  MapPinIcon,
+  PencilSimpleIcon,
+  SlidersHorizontalIcon,
+  PlayIcon,
+  CircleNotchIcon,
+  CheckCircleIcon,
+  WarningCircleIcon,
+} from '@phosphor-icons/react'
 import { generatePoints } from '../../lib/api'
 import { generateGridPoints } from '../../lib/geo'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+
+const EASE = [0.32, 0.72, 0, 1]
+
+// ── Shared chrome classNames (presentational only) ──
+const btnPrimary =
+  'inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-display font-semibold ' +
+  'bg-brand-600 hover:bg-brand-500 text-white transition-all duration-300 active:scale-[0.98] ' +
+  'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shadow-[0_8px_32px_rgba(37,99,235,0.25)]'
+const btnGlass =
+  'inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-display font-semibold ' +
+  'border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white ' +
+  'transition-all duration-300 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed'
+const panelShadow = 'shadow-[0_8px_32px_rgba(0,0,0,0.35)]'
 
 // Grid-based clustering — cell size shrinks as zoom increases
 function buildClusters(points, zoom) {
@@ -74,6 +99,7 @@ function computeSpacing(areaM2) {
 
 export default function MapTab({ project, scanPoints, onPointsGenerated, isLoaded, loadError }) {
   const { usage } = useAuth()
+  const reduceMotion = useReducedMotion()
   const keyLoading   = usage === null
   const noCreditsBlocked = usage !== null && !usage.can_scan
 
@@ -370,14 +396,15 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
   const clusters      = useMemo(() => buildClusters(displayPoints, zoom), [displayPoints, zoom])
 
   if (loadError) return (
-    <div className="flex items-center justify-center h-full text-red-400 text-sm">
+    <div className="flex items-center justify-center h-full text-red-400 text-sm gap-2">
+      <WarningCircleIcon weight="light" className="w-4 h-4" />
       Failed to load Google Maps. Check your API key.
     </div>
   )
 
   if (!isLoaded) return (
     <div className="flex items-center justify-center h-full">
-      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      <CircleNotchIcon weight="light" className="w-6 h-6 text-brand-500 animate-spin" />
     </div>
   )
 
@@ -466,12 +493,15 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
           </GoogleMap>
 
           {/* ── Search box overlay ── */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-80">
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-80"
+          >
             <div className="relative">
-              <div className="flex items-center bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl px-3 py-2.5 gap-2 backdrop-blur-sm">
-                <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              <div className={`flex items-center bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full px-3.5 py-2.5 gap-2 ${panelShadow}`}>
+                <MagnifyingGlassIcon weight="light" className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -480,33 +510,28 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
                   onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
                   onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
                   placeholder="Search city, state or ZIP…"
-                  className="flex-1 bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none"
+                  className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 outline-none"
                 />
                 {searchInput && (
                   <button onClick={() => { setSearchInput(''); setSuggestions([]); setShowDropdown(false) }}
-                    className="text-slate-600 hover:text-slate-400 transition">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    className="text-slate-500 hover:text-white transition active:scale-[0.98]">
+                    <XIcon weight="light" className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
               {/* Dropdown suggestions */}
               {showDropdown && suggestions.length > 0 && (
-                <div className="absolute top-full mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+                <div className={`absolute top-full mt-2 w-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-2xl overflow-hidden ${panelShadow}`}>
                   {suggestions.map((s, i) => (
                     <button
                       key={i}
                       onMouseDown={() => handleSelectSuggestion(s)}
-                      className="w-full text-left px-4 py-2.5 hover:bg-slate-800 flex items-start gap-2.5 transition"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/[0.08] flex items-start gap-2.5 transition"
                     >
-                      <svg className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                      </svg>
+                      <MapPinIcon weight="light" className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm text-slate-200 truncate">{s.display_name.split(',').slice(0, 2).join(',')}</p>
+                        <p className="text-sm text-white truncate">{s.display_name.split(',').slice(0, 2).join(',')}</p>
                         <p className="text-xs text-slate-500 truncate">{s.display_name.split(',').slice(2, 4).join(',').trim()}</p>
                       </div>
                     </button>
@@ -514,16 +539,16 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Point count badge */}
           {largeArea && estimatedCount != null ? (
-            <div className="absolute top-4 left-4 bg-slate-900/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 backdrop-blur-sm">
-              ~{estimatedCount.toLocaleString()} scan points <span className="text-slate-500 ml-1">(estimated)</span>
+            <div className={`absolute top-4 left-4 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full px-3.5 py-1.5 text-xs text-slate-300 ${panelShadow}`}>
+              ~<span className="font-mono">{estimatedCount.toLocaleString()}</span> scan points <span className="text-slate-500 ml-1">(estimated)</span>
             </div>
           ) : ptCount > 0 && (
-            <div className="absolute top-4 left-4 bg-slate-900/90 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 backdrop-blur-sm">
-              {ptCount.toLocaleString()} scan points
+            <div className={`absolute top-4 left-4 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full px-3.5 py-1.5 text-xs text-slate-300 ${panelShadow}`}>
+              <span className="font-mono">{ptCount.toLocaleString()}</span> scan points
               {ptCount > 2000 && <span className="text-slate-500 ml-1">(showing 2,000)</span>}
             </div>
           )}
@@ -531,11 +556,9 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
           {/* Mobile panel toggle */}
           <button
             onClick={() => setShowPanel(p => !p)}
-            className="absolute bottom-4 right-4 z-10 lg:hidden flex items-center gap-1.5 px-3 py-2 bg-navy-800/95 border border-white/[0.10] rounded-xl text-xs font-medium text-slate-300 shadow-xl backdrop-blur-sm"
+            className={`absolute bottom-4 right-4 z-10 lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full text-xs font-medium text-slate-300 active:scale-[0.98] transition ${panelShadow}`}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
-            </svg>
+            <SlidersHorizontalIcon weight="light" className="w-3.5 h-3.5" />
             Scan Area
           </button>
 
@@ -543,20 +566,18 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
       </div>
 
       {/* ── Right panel ── */}
-      <div className={`${showPanel ? 'flex' : 'hidden'} lg:flex flex-col bg-navy-800 border-l border-white/[0.06]
+      <div className={`${showPanel ? 'flex' : 'hidden'} lg:flex flex-col bg-white/[0.04] backdrop-blur-2xl border-l border-white/[0.10]
         absolute inset-0 z-20 lg:relative lg:inset-auto lg:z-auto lg:w-72`}>
         <div className="p-4 border-b border-white/[0.06] flex items-start justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-white">Scan Area</h3>
+            <h3 className="text-sm font-display font-semibold text-white">Scan Area</h3>
             <p className="text-xs text-slate-500 mt-0.5">Draw your target neighborhood</p>
           </div>
           <button
             onClick={() => setShowPanel(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition shrink-0"
+            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition active:scale-[0.98] shrink-0"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XIcon weight="light" className="w-4 h-4" />
           </button>
         </div>
 
@@ -572,23 +593,21 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
                   </p>
                   <button
                     onClick={() => setDrawingMode('polygon')}
-                    className="btn btn-outline w-full"
+                    className={`${btnGlass} w-full`}
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
-                    </svg>
+                    <PencilSimpleIcon weight="light" className="w-4 h-4" />
                     Draw Area
                   </button>
                 </>
               )}
               {drawingMode === 'polygon' && (
                 <div className="space-y-2">
-                  <div className="bg-brand-600/10 border border-brand-600/20 rounded-lg px-3 py-2">
+                  <div className="bg-brand-600/10 border border-brand-600/20 rounded-2xl px-3 py-2">
                     <p className="text-xs text-brand-400 font-medium">
                       {isDragging ? 'Drawing… release to finish' : 'Click and drag on the map to draw'}
                     </p>
                   </div>
-                  <button onClick={handleCancelDrawing} className="btn btn-outline w-full">
+                  <button onClick={handleCancelDrawing} className={`${btnGlass} w-full`}>
                     Cancel
                   </button>
                 </div>
@@ -602,20 +621,21 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
                 </span>
                 <button onClick={handleClear} className="text-xs text-slate-500 hover:text-red-400 transition shrink-0 ml-2">Clear</button>
               </div>
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
-                <p className="text-xs text-green-400">Area selected</p>
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-3 py-2">
+                <CheckCircleIcon weight="fill" className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <p className="text-xs text-emerald-400">Area selected</p>
               </div>
             </div>
           )}
 
           {/* Stats card */}
           {(ptCount > 0 || pointCount !== null) && (
-            <div className="bg-navy-900 border border-white/[0.06] rounded-lg p-3 space-y-2">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 space-y-2">
               {largeArea ? (
                 <>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-500">Est. Scan Points</span>
-                    <span className="text-brand-400 font-bold">~{(estimatedCount ?? 0).toLocaleString()}</span>
+                    <span className="text-brand-400 font-bold font-mono">~{(estimatedCount ?? 0).toLocaleString()}</span>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Large area — too big to scan directly. Draw a smaller custom area to run a scan.
@@ -625,11 +645,11 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
                 <>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-500">Scan Points</span>
-                    <span className="text-brand-400 font-bold">{ptCount.toLocaleString()}</span>
+                    <span className="text-brand-400 font-bold font-mono">{ptCount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-500">Est. Property Count</span>
-                    <span className="text-slate-300">
+                    <span className="text-slate-300 font-mono">
                       ~{Math.ceil(ptCount / 3).toLocaleString()}
                       <span className="text-slate-600"> – </span>
                       {ptCount.toLocaleString()}
@@ -644,14 +664,18 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
           )}
 
           {error && (
-            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+            <p className="flex items-start gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2">
+              <WarningCircleIcon weight="light" className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              {error}
+            </p>
           )}
         </div>
 
         {/* Run button */}
         <div className="p-4 border-t border-white/[0.06] space-y-2">
           {noCreditsBlocked && (
-            <p className="text-xs text-center text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5">
+            <p className="flex items-center justify-center gap-1.5 text-xs text-center text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-2xl px-2 py-1.5">
+              <WarningCircleIcon weight="light" className="w-3.5 h-3.5 shrink-0" />
               No credits remaining — contact your admin to add credits
             </p>
           )}
@@ -661,24 +685,22 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
             </p>
           )}
           {largeArea && (
-            <p className="text-xs text-center text-amber-500">
+            <p className="text-xs text-center text-amber-400">
               Area too large to scan — narrow your search to enable Run
             </p>
           )}
           <button
             onClick={handleGenerate}
             disabled={!polygon || generating || noCreditsBlocked || keyLoading || largeArea}
-            className="btn-primary w-full"
+            className={`${btnPrimary} w-full`}
           >
             {keyLoading ? (
-              <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Loading…</>
+              <><CircleNotchIcon weight="light" className="w-4 h-4 animate-spin" /> Loading…</>
             ) : generating ? (
-              <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating points…</>
+              <><CircleNotchIcon weight="light" className="w-4 h-4 animate-spin" /> Generating points…</>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
-                </svg>
+                <PlayIcon weight="fill" className="w-4 h-4" />
                 {scanPoints?.length > 0 ? 'Re-run Scan' : 'Run'}
               </>
             )}
