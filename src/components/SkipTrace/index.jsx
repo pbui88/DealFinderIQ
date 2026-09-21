@@ -971,8 +971,10 @@ function RecordRow({ record, checked, onCheck, onDelete, deletingId }) {
         <div className="flex items-center gap-1 mt-0.5">
           <span className="text-[10px] text-slate-700">{new Date(record.created_at).toLocaleDateString()}</span>
         </div>
-        {record.status === 'completed' && record.result && (
-          <ContactResult result={record.result} record={record} />
+        {record.status === 'completed' && (
+          record.result
+            ? <ContactResult result={record.result} record={record} />
+            : <p className="text-xs text-slate-600 mt-1.5 italic">No contact data found</p>
         )}
       </div>
 
