@@ -129,16 +129,10 @@ export default function Sidebar({ open, onClose }) {
         </button>
 
         {/* Logo */}
-        <div className="relative z-10 px-4 py-4 border-b border-white/[0.05] flex justify-center">
-          <img
-            src="/dealfinderiq_logo.jpeg"
-            alt="AI Dream Team"
-            className="h-[7.5rem] w-auto"
-            style={{
-              maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
-              WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
-            }}
-          />
+        <div className="relative z-10 px-4 py-6 border-b border-white/[0.05] flex justify-center">
+          <span className="font-display text-xl font-bold tracking-tight">
+            <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
+          </span>
         </div>
 
         {/* Nav */}

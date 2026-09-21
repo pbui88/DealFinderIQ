@@ -16,7 +16,9 @@ function GoogleIcon({ className = '' }) {
 function DealFinderIQLogo() {
   return (
     <div className="flex items-center justify-center mb-8">
-      <img src="/dealfinderiq_logo.jpeg" alt="DealFinderIQ" className="h-20 w-auto rounded-xl" />
+      <span className="font-display text-3xl font-bold tracking-tight">
+        <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
+      </span>
     </div>
   )
 }

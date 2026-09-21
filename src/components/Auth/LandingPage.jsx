@@ -14,15 +14,9 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="relative z-10 px-8 py-5 flex items-center justify-between max-w-7xl mx-auto w-full">
         <div className="flex items-center">
-          <img
-                src="/dealfinderiq_logo.jpeg"
-                alt="DealFinderIQ"
-                className="h-40 w-auto"
-                style={{
-                  maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
-                  WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
-                }}
-              />
+          <span className="font-display text-2xl font-bold tracking-tight">
+            <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <button
