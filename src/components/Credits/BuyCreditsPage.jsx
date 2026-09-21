@@ -33,23 +33,6 @@ function StatCard({ value, label, accent = false }) {
   )
 }
 
-// Builds a hidden form and submits it, navigating the browser to
-// Authorize.net's hosted payment page (Accept Hosted).
-function redirectToHostedForm(formUrl, token) {
-  const form = document.createElement('form')
-  form.method = 'POST'
-  form.action = formUrl
-
-  const input = document.createElement('input')
-  input.type  = 'hidden'
-  input.name  = 'token'
-  input.value = token
-  form.appendChild(input)
-
-  document.body.appendChild(form)
-  form.submit()
-}
-
 export default function BuyCreditsPage() {
   const { openSidebar } = useOutletContext()
   const { usage, refreshUsage } = useAuth()
@@ -85,7 +68,7 @@ export default function BuyCreditsPage() {
   }, [success, addedPts, navigate])
 
   // Poll refreshUsage every 3s for up to ~30s after a scan credit purchase.
-  // The Authorize.net webhook fires asynchronously after the redirect, so the
+  // The Stripe webhook fires asynchronously after the redirect, so the
   // balance may not be updated yet on the first render.
   useEffect(() => {
     if (!creditsPolling) return
@@ -108,7 +91,7 @@ export default function BuyCreditsPage() {
   }, [stSuccess, rawStDeposit, navigate])
 
   // Poll refreshUsage every 3s for up to ~30s after a skip trace deposit return.
-  // The Authorize.net webhook fires asynchronously after the redirect, so the
+  // The Stripe webhook fires asynchronously after the redirect, so the
   // balance may not be updated yet on the first render.
   useEffect(() => {
     if (!stPolling) return
@@ -124,7 +107,7 @@ export default function BuyCreditsPage() {
     return () => clearInterval(id)
   }, [stPolling, refreshUsage])
 
-  // Reset loading when the user navigates back from the Authorize.net page
+  // Reset loading when the user navigates back from Stripe Checkout
   // via the browser Back button (page is restored from bfcache with stale state).
   useEffect(() => {
     const handlePageShow = (e) => { if (e.persisted) setLoading(null) }
@@ -136,8 +119,8 @@ export default function BuyCreditsPage() {
     setLoading(points)
     setPaymentError(null)
     try {
-      const { token, formUrl } = await createPayment(points)
-      redirectToHostedForm(formUrl, token)
+      const { url } = await createPayment(points)
+      window.location.href = url
     } catch (e) {
       setPaymentError(e.message)
       setLoading(null)
@@ -150,9 +133,9 @@ export default function BuyCreditsPage() {
     setDepositLoading(true)
     setDepositError(null)
     try {
-      const { token, formUrl } = await createSkipTracePayment(amt)
+      const { url } = await createSkipTracePayment(amt)
       sessionStorage.setItem('_pendingStDeposit', amt.toFixed(2))
-      redirectToHostedForm(formUrl, token)
+      window.location.href = url
     } catch (e) {
       setDepositError(e.message)
       setDepositLoading(false)
@@ -469,7 +452,7 @@ export default function BuyCreditsPage() {
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
-          Payments processed securely by Authorize.net · Credits never expire
+          Payments processed securely by Stripe · Credits never expire
         </div>
 
       </div>

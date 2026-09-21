@@ -1,5 +1,5 @@
 import { requireAuth, adminSupabase, ok, err, options } from './utils/supabase.js'
-import { createHostedPaymentSession } from './utils/authorizenet.js'
+import { createCheckoutSession } from './utils/stripe.js'
 
 const PACKAGES = {
    2500: { points:  2500, amount: '35.00',  label:  '2,500 Credits' },
@@ -25,7 +25,7 @@ export const handler = async (event) => {
   const supabase = adminSupabase()
 
   try {
-    const { token, formUrl } = await createHostedPaymentSession({
+    const { url } = await createCheckoutSession({
       supabase,
       userId:      user.id,
       subtotal:    parseFloat(pkg.amount),
@@ -33,7 +33,7 @@ export const handler = async (event) => {
       returnUrl:   `/credits?purchase=${pkg.points}`,
       insertData:  { points: pkg.points },
     })
-    return ok({ token, formUrl })
+    return ok({ url })
   } catch (e) {
     console.error('create-payment:', e.message)
     return err(e.message, 500)

@@ -226,7 +226,7 @@ You can view your current balance and usage anytime under **Credits** in the sid
 | Pro | 15,000 | $210 | $0.014 |
 | Max | 20,000 | $280 | $0.014 |
 
-Payments are processed securely by Authorize.net. No card details are stored on DealFinderIQ servers.
+Payments are processed securely by Stripe. No card details are stored on DealFinderIQ servers.
 
 ### Cost Examples
 
@@ -376,7 +376,7 @@ Yes. Each user can only see their own scan projects and results. Administrators 
 |---------|------|
 | Netlify (hosting + functions) | $0–$25/month (free tier available) |
 | Supabase (database + storage) | $0–$25/month (free tier available) |
-| Authorize.net (payment processing) | ~2.9% + $0.30 per transaction |
+| Stripe (payment processing) | ~2.9% + $0.30 per transaction |
 
 ### Cost Example — 1,000 Point Scan
 

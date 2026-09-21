@@ -81,7 +81,7 @@ export const exportProject    = (projectId, format, filters = {}) =>
 // ── Usage (current user) ─────────────────────────────────────
 export const getMyUsage = () => call('my-usage')
 
-// ── Credits / Authorize.net ───────────────────────────────────
+// ── Credits / Stripe ────────────────────────────────────────
 export const createPayment          = (points) => call('create-payment', 'POST', { points })
 export const createSkipTracePayment = (amount) => call('create-skip-trace-payment', 'POST', { amount })
 

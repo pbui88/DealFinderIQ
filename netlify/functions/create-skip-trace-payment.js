@@ -1,5 +1,5 @@
 import { requireAuth, adminSupabase, ok, err, options } from './utils/supabase.js'
-import { createHostedPaymentSession } from './utils/authorizenet.js'
+import { createCheckoutSession } from './utils/stripe.js'
 
 const MIN_DEPOSIT = 5
 const MAX_DEPOSIT = 5000
@@ -23,7 +23,7 @@ export const handler = async (event) => {
   const supabase = adminSupabase()
 
   try {
-    const { token, formUrl } = await createHostedPaymentSession({
+    const { url } = await createCheckoutSession({
       supabase,
       userId:      user.id,
       subtotal,
@@ -31,7 +31,7 @@ export const handler = async (event) => {
       returnUrl:   `/credits?skip_trace_deposit=${subtotal.toFixed(2)}`,
       insertData:  { type: 'skip_trace', points: 0 },
     })
-    return ok({ token, formUrl })
+    return ok({ url })
   } catch (e) {
     console.error('create-skip-trace-payment:', e.message)
     return err(e.message, 500)
