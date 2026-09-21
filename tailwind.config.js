@@ -15,17 +15,21 @@ export default {
         // Minimalist workspace palette (pilot: ResultsTab). Namespaced under
         // paper/ink/line/pastel so it never collides with the existing
         // navy/brand tokens other pages still use.
+        // Recalibrated for contrast/glare after "too bright, hard to read"
+        // feedback on the first pass: dimmer, warmer canvas so white cards
+        // read as intentional focal surfaces instead of the whole screen
+        // being uniformly blinding; darker muted/border tones for definition.
         paper: {
-          DEFAULT: '#FBFBFA',
-          bone:    '#F7F6F3',
+          DEFAULT: '#F4F3EF',
+          bone:    '#ECEAE3',
           card:    '#FFFFFF',
         },
         ink: {
           DEFAULT: '#111111',
-          muted:   '#787774',
-          faint:   '#B4B4B2',
+          muted:   '#57554F',
+          faint:   '#8B8A82',
         },
-        line: '#EAEAEA',
+        line: '#D9D6CD',
         // Tag/badge pastels — usage: bg-tagRed-bg text-tagRed-text, etc.
         tagRed:    { bg: '#FDEBEC', text: '#9F2F2D' },
         tagBlue:   { bg: '#E1F3FE', text: '#1F6C9F' },
