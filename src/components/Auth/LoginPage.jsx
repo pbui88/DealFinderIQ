@@ -31,7 +31,7 @@ function DealFinderIQLogo() {
   return (
     <div className="flex items-center justify-center mb-8">
       <span className="font-display text-3xl font-bold tracking-tight">
-        <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
+        <span className="text-ink">Deal</span><span className="text-brand-600">Finder</span><span className="text-ink">IQ</span>
       </span>
     </div>
   )
@@ -41,10 +41,10 @@ function DealFinderIQLogo() {
 function Field({ label, type = 'text', value, onChange, placeholder, autoComplete, icon: Icon, toggle }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-ink-muted mb-1.5">{label}</label>
       <div className="relative">
         {Icon && (
-          <Icon weight="light" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Icon weight="light" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
         )}
         <input
           type={type}
@@ -53,7 +53,7 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoComplet
           placeholder={placeholder}
           autoComplete={autoComplete}
           required
-          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} ${toggle ? 'pr-10' : 'pr-4'} py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]`}
+          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} ${toggle ? 'pr-10' : 'pr-4'} py-3 bg-white border border-line rounded-xl text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]`}
         />
         {toggle}
       </div>
@@ -77,7 +77,7 @@ function PasswordField({ label, value, onChange, placeholder, autoComplete }) {
           type="button"
           onClick={() => setShow(s => !s)}
           tabIndex={-1}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition"
         >
           {show ? <EyeSlashIcon weight="light" className="w-4 h-4" /> : <EyeIcon weight="light" className="w-4 h-4" />}
         </button>
@@ -91,12 +91,12 @@ function PendingApprovalScreen({ email, onBack }) {
   return (
     <div className="text-center">
       <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-5">
-        <ClockIcon weight="light" className="w-7 h-7 text-amber-400" />
+        <ClockIcon weight="light" className="w-7 h-7 text-amber-500" />
       </div>
-      <h2 className="text-xl font-bold text-white mb-2">Account pending approval</h2>
-      <p className="text-sm text-slate-400 mb-1">Thanks for signing up,</p>
-      <p className="text-sm font-semibold text-slate-200 mb-6">{email}</p>
-      <p className="text-xs text-slate-500 mb-8 leading-relaxed">
+      <h2 className="text-xl font-bold text-ink mb-2">Account pending approval</h2>
+      <p className="text-sm text-ink-muted mb-1">Thanks for signing up,</p>
+      <p className="text-sm font-semibold text-ink mb-6">{email}</p>
+      <p className="text-xs text-ink-muted mb-8 leading-relaxed">
         Your account is waiting for admin activation. You'll have full access once an admin reviews and activates your account — this usually happens within 24 hours.
       </p>
       <a
@@ -107,7 +107,7 @@ function PendingApprovalScreen({ email, onBack }) {
       >
         Book your setup call
       </a>
-      <button onClick={onBack} className="text-sm text-brand-400 hover:text-brand-300 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+      <button onClick={onBack} className="text-sm text-brand-600 hover:text-brand-700 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
         Back to sign in
       </button>
     </div>
@@ -134,25 +134,25 @@ function ForgotPasswordScreen({ onBack, resetPassword }) {
   if (sent) return (
     <div className="text-center">
       <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
-        <CheckCircleIcon weight="light" className="w-7 h-7 text-emerald-400" />
+        <CheckCircleIcon weight="light" className="w-7 h-7 text-emerald-500" />
       </div>
-      <h2 className="text-xl font-bold text-white mb-2">Email sent</h2>
-      <p className="text-sm text-slate-400 mb-8">Check your inbox for a password reset link.</p>
-      <button onClick={onBack} className="text-sm text-brand-400 hover:text-brand-300 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">Back to sign in</button>
+      <h2 className="text-xl font-bold text-ink mb-2">Email sent</h2>
+      <p className="text-sm text-ink-muted mb-8">Check your inbox for a password reset link.</p>
+      <button onClick={onBack} className="text-sm text-brand-600 hover:text-brand-700 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">Back to sign in</button>
     </div>
   )
 
   return (
     <div>
-      <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] mb-6">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] mb-6">
         <ArrowLeftIcon weight="light" className="w-3.5 h-3.5" />
         Back
       </button>
-      <h2 className="text-xl font-bold text-white mb-1">Reset password</h2>
-      <p className="text-sm text-slate-400 mb-6">Enter your email and we'll send a reset link.</p>
+      <h2 className="text-xl font-bold text-ink mb-1">Reset password</h2>
+      <p className="text-sm text-ink-muted mb-6">Enter your email and we'll send a reset link.</p>
       <form onSubmit={handle} className="space-y-4">
         <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" icon={EnvelopeIcon} />
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && <p className="text-xs text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={loading}
@@ -227,13 +227,13 @@ export default function LoginPage() {
       <DealFinderIQLogo />
 
       {/* Tabs */}
-      <div className="flex bg-white/5 border border-white/10 rounded-full p-1 mb-6">
+      <div className="flex bg-slate-100 border border-line rounded-full p-1 mb-6">
         {[['signin', 'Sign In'], ['signup', 'Create Account']].map(([t, label]) => (
           <button
             key={t}
             onClick={() => switchTab(t)}
             className={`flex-1 py-2 text-sm font-medium rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-              tab === t ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200'
+              tab === t ? 'bg-white text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
             }`}
           >
             {label}
@@ -244,7 +244,7 @@ export default function LoginPage() {
       {/* Google button */}
       <button
         onClick={signInWithGoogle}
-        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 active:scale-[0.98] text-slate-900 font-semibold px-4 py-3 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm mb-5"
+        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 border border-line active:scale-[0.98] text-slate-900 font-semibold px-4 py-3 rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm mb-5"
       >
         <GoogleIcon className="w-4 h-4" />
         {tab === 'signin' ? 'Sign in with Google' : 'Sign up with Google'}
@@ -252,9 +252,9 @@ export default function LoginPage() {
 
       {/* Divider */}
       <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 h-px bg-white/10" />
-        <span className="text-xs text-slate-500">or with email</span>
-        <div className="flex-1 h-px bg-white/10" />
+        <div className="flex-1 h-px bg-line" />
+        <span className="text-xs text-ink-muted">or with email</span>
+        <div className="flex-1 h-px bg-line" />
       </div>
 
       {/* Email form */}
@@ -271,11 +271,11 @@ export default function LoginPage() {
           <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} placeholder="••••••••" autoComplete="new-password" />
         )}
 
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && <p className="text-xs text-red-600">{error}</p>}
 
         {tab === 'signin' && (
           <div className="flex justify-end">
-            <button type="button" onClick={() => setScreen('forgot')} className="text-xs text-slate-500 hover:text-brand-400 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+            <button type="button" onClick={() => setScreen('forgot')} className="text-xs text-ink-muted hover:text-brand-600 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
               Forgot password?
             </button>
           </div>
@@ -292,7 +292,7 @@ export default function LoginPage() {
       </form>
 
       {tab === 'signup' && (
-        <p className="text-xs text-slate-500 text-center mt-4 leading-relaxed">
+        <p className="text-xs text-ink-muted text-center mt-4 leading-relaxed">
           New accounts require admin approval before access is granted.
         </p>
       )}
@@ -303,26 +303,26 @@ export default function LoginPage() {
 function PageShell({ children }) {
   const reduce = useReducedMotion()
   return (
-    <div className="relative min-h-screen bg-navy-950 flex items-center justify-center px-4 overflow-hidden">
-      <div className="absolute inset-0 bg-grid-dark pointer-events-none" />
+    <div className="relative min-h-screen bg-paper flex items-center justify-center px-4 overflow-hidden">
+      <div className="absolute inset-0 bg-grid-light pointer-events-none" />
 
       {/* ambient glow orbs */}
       <motion.div
         aria-hidden
-        className="absolute -z-0 top-[-10%] left-[10%] w-[26rem] h-[26rem] rounded-full bg-brand-500/20 blur-[110px] pointer-events-none"
+        className="absolute -z-0 top-[-10%] left-[10%] w-[26rem] h-[26rem] rounded-full bg-brand-500/10 blur-[110px] pointer-events-none"
         animate={reduce ? undefined : { x: [0, 40, 0], y: [0, 24, 0], opacity: [0.6, 0.85, 0.6] }}
         transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
         aria-hidden
-        className="absolute -z-0 bottom-[-15%] right-[12%] w-[22rem] h-[22rem] rounded-full bg-emerald-500/10 blur-[110px] pointer-events-none"
+        className="absolute -z-0 bottom-[-15%] right-[12%] w-[22rem] h-[22rem] rounded-full bg-emerald-500/8 blur-[110px] pointer-events-none"
         animate={reduce ? undefined : { x: [0, -30, 0], y: [0, -20, 0], opacity: [0.5, 0.75, 0.5] }}
         transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
 
       <Link
         to="/"
-        className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
       >
         <HouseIcon weight="light" className="w-4 h-4" />
         Home
@@ -335,8 +335,8 @@ function PageShell({ children }) {
         transition={{ duration: 0.6, ease: EASE }}
       >
         {/* Double-bezel card */}
-        <div className="bg-white/5 border border-white/10 p-1.5 rounded-[2rem]">
-          <div className="bg-navy-900/80 backdrop-blur-2xl rounded-[calc(2rem-0.375rem)] p-8">
+        <div className="bg-slate-100 border border-line p-1.5 rounded-[2rem]">
+          <div className="bg-white/90 backdrop-blur-2xl rounded-[calc(2rem-0.375rem)] p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
             {children}
           </div>
         </div>

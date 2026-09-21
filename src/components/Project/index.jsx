@@ -83,7 +83,7 @@ export default function ProjectPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-navy-900">
+      <div className="flex h-screen items-center justify-center bg-paper">
         <CircleNotchIcon weight="light" className="w-6 h-6 text-brand-500 animate-spin" />
       </div>
     )
@@ -92,23 +92,23 @@ export default function ProjectPage() {
   if (!project) return null
 
   return (
-    <div className="flex flex-col h-screen bg-navy-900">
+    <div className="flex flex-col h-screen bg-paper">
       {/* Header */}
-      <header className="flex items-center gap-3 px-3 sm:px-5 py-3 border-b border-white/[0.06] shrink-0 bg-navy-950">
+      <header className="flex items-center gap-3 px-3 sm:px-5 py-3 border-b border-line shrink-0 bg-paper-bone">
         <button
           onClick={openSidebar}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition active:scale-[0.98] lg:hidden shrink-0"
+          className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-paper transition active:scale-[0.98] lg:hidden shrink-0"
           aria-label="Open navigation"
         >
           <ListIcon weight="light" className="w-4 h-4" />
         </button>
-        <Link to="/dashboard" className="text-slate-500 hover:text-slate-200 transition shrink-0">
+        <Link to="/dashboard" className="text-ink-muted hover:text-ink transition shrink-0">
           <ArrowLeftIcon weight="light" className="w-4 h-4" />
         </Link>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="text-sm font-semibold text-white truncate">{project.name}</h1>
+            <h1 className="text-sm font-semibold text-ink truncate">{project.name}</h1>
             {(() => {
               const displayStatus = (
                 ['analyzing', 'collecting', 'queued'].includes(project.status) && scanPoints.length > 0
@@ -121,12 +121,12 @@ export default function ProjectPage() {
             })()}
           </div>
           {scanPoints.length > 0 && (
-            <p className="text-xs text-slate-500">{scanPoints.length.toLocaleString()} properties scan</p>
+            <p className="text-xs text-ink-muted">{scanPoints.length.toLocaleString()} properties scan</p>
           )}
         </div>
 
         {/* Tabs */}
-        <div className="relative flex items-center bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full p-1 gap-0.5">
+        <div className="relative flex items-center bg-white/90 backdrop-blur-2xl border border-line rounded-full p-1 gap-0.5">
           {TABS.map(tab => {
             const isActive = activeTab === tab.id
             return (
@@ -135,7 +135,7 @@ export default function ProjectPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-display font-medium
                   transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]
-                  ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                  ${isActive ? 'text-white' : 'text-ink-muted hover:text-ink'}`}
               >
                 {isActive && (
                   reduceMotion ? (

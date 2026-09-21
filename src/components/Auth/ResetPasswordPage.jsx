@@ -17,9 +17,9 @@ function Field({ label, value, onChange, placeholder, autoComplete }) {
   const [show, setShow] = useState(false)
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-ink-muted mb-1.5">{label}</label>
       <div className="relative">
-        <LockIcon weight="light" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        <LockIcon weight="light" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
         <input
           type={show ? 'text' : 'password'}
           value={value}
@@ -27,13 +27,13 @@ function Field({ label, value, onChange, placeholder, autoComplete }) {
           placeholder={placeholder}
           autoComplete={autoComplete}
           required
-          className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+          className="w-full pl-10 pr-10 py-3 bg-white border border-line rounded-xl text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
         />
         <button
           type="button"
           onClick={() => setShow(s => !s)}
           tabIndex={-1}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition"
         >
           {show ? <EyeSlashIcon weight="light" className="w-4 h-4" /> : <EyeIcon weight="light" className="w-4 h-4" />}
         </button>
@@ -87,24 +87,24 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-navy-950 flex items-center justify-center px-4 overflow-hidden">
-      <div className="absolute inset-0 bg-grid-dark pointer-events-none" />
+    <div className="relative min-h-screen bg-paper flex items-center justify-center px-4 overflow-hidden">
+      <div className="absolute inset-0 bg-grid-light pointer-events-none" />
 
       {/* ambient glow orbs */}
       <motion.div
         aria-hidden
-        className="absolute -z-0 top-[-10%] left-[10%] w-[26rem] h-[26rem] rounded-full bg-brand-500/20 blur-[110px] pointer-events-none"
+        className="absolute -z-0 top-[-10%] left-[10%] w-[26rem] h-[26rem] rounded-full bg-brand-500/10 blur-[110px] pointer-events-none"
         animate={reduce ? undefined : { x: [0, 40, 0], y: [0, 24, 0], opacity: [0.6, 0.85, 0.6] }}
         transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
         aria-hidden
-        className="absolute -z-0 bottom-[-15%] right-[12%] w-[22rem] h-[22rem] rounded-full bg-emerald-500/10 blur-[110px] pointer-events-none"
+        className="absolute -z-0 bottom-[-15%] right-[12%] w-[22rem] h-[22rem] rounded-full bg-emerald-500/8 blur-[110px] pointer-events-none"
         animate={reduce ? undefined : { x: [0, -30, 0], y: [0, -20, 0], opacity: [0.5, 0.75, 0.5] }}
         transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
 
-      <Link to="/login" className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+      <Link to="/login" className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
         <ArrowLeftIcon weight="light" className="w-4 h-4" />
         Back to sign in
       </Link>
@@ -115,23 +115,23 @@ export default function ResetPasswordPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: EASE }}
       >
-        <div className="bg-white/5 border border-white/10 p-1.5 rounded-[2rem]">
-          <div className="bg-navy-900/80 backdrop-blur-2xl rounded-[calc(2rem-0.375rem)] p-8">
+        <div className="bg-slate-100 border border-line p-1.5 rounded-[2rem]">
+          <div className="bg-white/90 backdrop-blur-2xl rounded-[calc(2rem-0.375rem)] p-8 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
             {invalid ? (
               <div className="text-center">
-                <h2 className="text-xl font-bold text-white mb-2">Link expired</h2>
-                <p className="text-sm text-slate-400 mb-6">This password reset link is invalid or has expired. Request a new one from the sign-in page.</p>
-                <button onClick={() => navigate('/login')} className="text-sm text-brand-400 hover:text-brand-300 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                <h2 className="text-xl font-bold text-ink mb-2">Link expired</h2>
+                <p className="text-sm text-ink-muted mb-6">This password reset link is invalid or has expired. Request a new one from the sign-in page.</p>
+                <button onClick={() => navigate('/login')} className="text-sm text-brand-600 hover:text-brand-700 underline-offset-4 hover:underline transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
                   Back to sign in
                 </button>
               </div>
             ) : done ? (
               <div className="text-center">
                 <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5">
-                  <CheckCircleIcon weight="light" className="w-7 h-7 text-emerald-400" />
+                  <CheckCircleIcon weight="light" className="w-7 h-7 text-emerald-500" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">Password updated</h2>
-                <p className="text-sm text-slate-400 mb-8">You can now sign in with your new password.</p>
+                <h2 className="text-xl font-bold text-ink mb-2">Password updated</h2>
+                <p className="text-sm text-ink-muted mb-8">You can now sign in with your new password.</p>
                 <button onClick={() => navigate('/dashboard')} className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:scale-[0.98] text-white font-semibold rounded-full transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-sm">
                   Continue to DealFinderIQ
                 </button>
@@ -142,12 +142,12 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <div>
-                <h2 className="text-xl font-bold text-white mb-1">Set a new password</h2>
-                <p className="text-sm text-slate-400 mb-6">Choose a new password for your account.</p>
+                <h2 className="text-xl font-bold text-ink mb-1">Set a new password</h2>
+                <p className="text-sm text-ink-muted mb-6">Choose a new password for your account.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <Field label="New password" value={password} onChange={setPassword} placeholder="Min. 8 characters" autoComplete="new-password" />
                   <Field label="Confirm password" value={confirm} onChange={setConfirm} placeholder="••••••••" autoComplete="new-password" />
-                  {error && <p className="text-xs text-red-400">{error}</p>}
+                  {error && <p className="text-xs text-red-600">{error}</p>}
                   <button
                     type="submit"
                     disabled={loading}

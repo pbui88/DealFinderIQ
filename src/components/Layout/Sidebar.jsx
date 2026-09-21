@@ -18,8 +18,8 @@ function NavItem({ to, icon, label }) {
       className={({ isActive }) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] ${
           isActive
-            ? 'bg-brand-600/15 text-brand-400 border border-brand-600/25'
-            : 'text-slate-500 border border-transparent hover:text-slate-300 hover:bg-white/[0.04]'
+            ? 'bg-brand-600/15 text-brand-600 border border-brand-600/25'
+            : 'text-ink-muted border border-transparent hover:text-ink hover:bg-black/[0.03]'
         }`
       }
     >
@@ -39,48 +39,48 @@ function UsageWidget() {
   const empty     = remaining <= 0
   const low       = !empty && pct >= 75
 
-  const barColor   = empty ? 'bg-red-500' : low ? 'bg-amber-400' : 'bg-brand-500'
-  const labelColor = empty ? 'text-red-400' : low ? 'text-amber-400' : 'text-slate-300'
+  const barColor   = empty ? 'bg-red-500' : low ? 'bg-amber-500' : 'bg-brand-500'
+  const labelColor = empty ? 'text-red-600' : low ? 'text-amber-600' : 'text-ink'
 
   return (
     <div className="px-3 pb-3">
-      <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-3">
+      <div className="bg-white/70 backdrop-blur-2xl border border-line rounded-2xl p-3 shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-slate-500">Credits</span>
+          <span className="text-xs font-medium text-ink-muted">Credits</span>
           <span className={`text-xs font-bold font-mono ${labelColor}`}>
             {remaining.toLocaleString()} left
           </span>
         </div>
-        <div className="h-1 w-full bg-white/[0.06] rounded-full overflow-hidden mb-2">
+        <div className="h-1 w-full bg-black/[0.06] rounded-full overflow-hidden mb-2">
           <div
             className={`h-full rounded-full transition-all duration-500 ${barColor}`}
             style={{ width: totalCredits > 0 ? `${100 - pct}%` : '0%' }}
           />
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-mono text-slate-600">
+          <span className="text-xs font-mono text-ink-faint">
             {purchasedCreditsUsed.toLocaleString()} used
           </span>
-          <span className="text-xs font-mono text-slate-600">
+          <span className="text-xs font-mono text-ink-faint">
             {totalCredits.toLocaleString()} total
           </span>
         </div>
         {empty && totalCredits > 0 && (
           <div className="mt-2 flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 rounded-xl px-2 py-1.5">
-            <span className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0" />
-            <span className="text-xs text-red-400 font-medium">Credits exhausted</span>
+            <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
+            <span className="text-xs text-red-600 font-medium">Credits exhausted</span>
           </div>
         )}
         {empty && totalCredits === 0 && (
           <div className="mt-2 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2 py-1.5">
-            <span className="w-1.5 h-1.5 bg-amber-400 rounded-full shrink-0" />
-            <span className="text-xs text-amber-400 font-medium">No credits — contact admin</span>
+            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
+            <span className="text-xs text-amber-600 font-medium">No credits — contact admin</span>
           </div>
         )}
         {!empty && low && (
           <div className="mt-2 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2 py-1.5">
-            <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse shrink-0" />
-            <span className="text-xs text-amber-400 font-medium">{remaining.toLocaleString()} pts remaining</span>
+            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse shrink-0" />
+            <span className="text-xs text-amber-600 font-medium">{remaining.toLocaleString()} pts remaining</span>
           </div>
         )}
       </div>
@@ -110,7 +110,7 @@ export default function Sidebar({ open, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
-            className="fixed inset-0 bg-navy-950/80 backdrop-blur-2xl z-40 lg:hidden"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
             onClick={onClose}
           />
         )}
@@ -118,7 +118,7 @@ export default function Sidebar({ open, onClose }) {
 
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-56 shrink-0
-        border-r border-white/[0.08] flex flex-col h-full
+        border-r border-line flex flex-col h-full
         transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${open ? 'translate-x-0' : '-translate-x-full'}
         lg:relative lg:translate-x-0
@@ -130,22 +130,22 @@ export default function Sidebar({ open, onClose }) {
           backgroundRepeat: 'no-repeat',
         }}
       >
-        {/* Dark overlay so content remains readable */}
-        <div className="absolute inset-0 bg-navy-950/85 backdrop-blur-2xl pointer-events-none" />
+        {/* Light overlay so content remains readable over the background image */}
+        <div className="absolute inset-0 bg-paper/90 backdrop-blur-2xl pointer-events-none" />
 
         {/* Close button — mobile only */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-xl text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all duration-300 active:scale-[0.98] lg:hidden"
+          className="absolute top-3 right-3 z-10 p-1.5 rounded-xl text-ink-muted hover:text-ink hover:bg-black/[0.05] transition-all duration-300 active:scale-[0.98] lg:hidden"
           aria-label="Close navigation"
         >
           <XIcon className="w-4 h-4" weight="light" />
         </button>
 
         {/* Logo */}
-        <div className="relative z-10 px-4 py-6 border-b border-white/[0.08] flex justify-center">
+        <div className="relative z-10 px-4 py-6 border-b border-line flex justify-center">
           <span className="font-display text-xl font-bold tracking-tight">
-            <span className="text-white">Deal</span><span className="text-brand-400">Finder</span><span className="text-white">IQ</span>
+            <span className="text-ink">Deal</span><span className="text-brand-600">Finder</span><span className="text-ink">IQ</span>
           </span>
         </div>
 
@@ -179,21 +179,21 @@ export default function Sidebar({ open, onClose }) {
         <div className="relative z-10"><UsageWidget /></div>
 
         {/* User */}
-        <div className="relative z-10 p-3 border-t border-white/[0.08]">
+        <div className="relative z-10 p-3 border-t border-line">
           <div className="flex items-center gap-2.5 px-2 py-1.5 mb-1.5">
             <div className="w-7 h-7 rounded-full bg-brand-600/20 border border-brand-600/30 flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-brand-400">{initial}</span>
+              <span className="text-xs font-bold text-brand-600">{initial}</span>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-200 truncate">
+              <p className="text-xs font-semibold text-ink truncate">
                 {profile?.full_name || profile?.email || 'User'}
               </p>
-              {isAdmin && <p className="text-[10px] text-brand-500 font-semibold">Admin</p>}
+              {isAdmin && <p className="text-[10px] text-brand-600 font-semibold">Admin</p>}
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-300 hover:bg-white/[0.04] transition-all duration-300 active:scale-[0.98]"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-ink-faint hover:text-ink hover:bg-black/[0.03] transition-all duration-300 active:scale-[0.98]"
           >
             <SignOutIcon className="w-3.5 h-3.5" weight="light" />
             Sign out

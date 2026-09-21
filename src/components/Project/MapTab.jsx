@@ -27,9 +27,9 @@ const btnPrimary =
   'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shadow-[0_8px_32px_rgba(37,99,235,0.25)]'
 const btnGlass =
   'inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-display font-semibold ' +
-  'border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white ' +
+  'border border-line bg-white/90 hover:bg-paper-bone text-ink ' +
   'transition-all duration-300 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed'
-const panelShadow = 'shadow-[0_8px_32px_rgba(0,0,0,0.35)]'
+const panelShadow = 'shadow-[0_8px_24px_rgba(15,23,42,0.12)]'
 
 // Grid-based clustering — cell size shrinks as zoom increases
 function buildClusters(points, zoom) {
@@ -396,7 +396,7 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
   const clusters      = useMemo(() => buildClusters(displayPoints, zoom), [displayPoints, zoom])
 
   if (loadError) return (
-    <div className="flex items-center justify-center h-full text-red-400 text-sm gap-2">
+    <div className="flex items-center justify-center h-full text-red-600 text-sm gap-2">
       <WarningCircleIcon weight="light" className="w-4 h-4" />
       Failed to load Google Maps. Check your API key.
     </div>
@@ -500,8 +500,8 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
             className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-80"
           >
             <div className="relative">
-              <div className={`flex items-center bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full px-3.5 py-2.5 gap-2 ${panelShadow}`}>
-                <MagnifyingGlassIcon weight="light" className="w-4 h-4 text-slate-400 shrink-0" />
+              <div className={`flex items-center bg-white/90 backdrop-blur-2xl border border-line rounded-full px-3.5 py-2.5 gap-2 ${panelShadow}`}>
+                <MagnifyingGlassIcon weight="light" className="w-4 h-4 text-ink-muted shrink-0" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -510,11 +510,11 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
                   onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
                   onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
                   placeholder="Search city, state or ZIP…"
-                  className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+                  className="flex-1 bg-transparent text-sm text-ink placeholder-ink-muted outline-none"
                 />
                 {searchInput && (
                   <button onClick={() => { setSearchInput(''); setSuggestions([]); setShowDropdown(false) }}
-                    className="text-slate-500 hover:text-white transition active:scale-[0.98]">
+                    className="text-ink-muted hover:text-ink transition active:scale-[0.98]">
                     <XIcon weight="light" className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -522,17 +522,17 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
 
               {/* Dropdown suggestions */}
               {showDropdown && suggestions.length > 0 && (
-                <div className={`absolute top-full mt-2 w-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-2xl overflow-hidden ${panelShadow}`}>
+                <div className={`absolute top-full mt-2 w-full bg-white/90 backdrop-blur-2xl border border-line rounded-2xl overflow-hidden ${panelShadow}`}>
                   {suggestions.map((s, i) => (
                     <button
                       key={i}
                       onMouseDown={() => handleSelectSuggestion(s)}
-                      className="w-full text-left px-4 py-2.5 hover:bg-white/[0.08] flex items-start gap-2.5 transition"
+                      className="w-full text-left px-4 py-2.5 hover:bg-paper-bone flex items-start gap-2.5 transition"
                     >
-                      <MapPinIcon weight="light" className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                      <MapPinIcon weight="light" className="w-3.5 h-3.5 text-ink-muted shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm text-white truncate">{s.display_name.split(',').slice(0, 2).join(',')}</p>
-                        <p className="text-xs text-slate-500 truncate">{s.display_name.split(',').slice(2, 4).join(',').trim()}</p>
+                        <p className="text-sm text-ink truncate">{s.display_name.split(',').slice(0, 2).join(',')}</p>
+                        <p className="text-xs text-ink-muted truncate">{s.display_name.split(',').slice(2, 4).join(',').trim()}</p>
                       </div>
                     </button>
                   ))}
@@ -543,20 +543,20 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
 
           {/* Point count badge */}
           {largeArea && estimatedCount != null ? (
-            <div className={`absolute top-4 left-4 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full px-3.5 py-1.5 text-xs text-slate-300 ${panelShadow}`}>
-              ~<span className="font-mono">{estimatedCount.toLocaleString()}</span> scan points <span className="text-slate-500 ml-1">(estimated)</span>
+            <div className={`absolute top-4 left-4 bg-white/90 backdrop-blur-2xl border border-line rounded-full px-3.5 py-1.5 text-xs text-ink-muted ${panelShadow}`}>
+              ~<span className="font-mono">{estimatedCount.toLocaleString()}</span> scan points <span className="text-ink-muted ml-1">(estimated)</span>
             </div>
           ) : ptCount > 0 && (
-            <div className={`absolute top-4 left-4 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full px-3.5 py-1.5 text-xs text-slate-300 ${panelShadow}`}>
+            <div className={`absolute top-4 left-4 bg-white/90 backdrop-blur-2xl border border-line rounded-full px-3.5 py-1.5 text-xs text-ink-muted ${panelShadow}`}>
               <span className="font-mono">{ptCount.toLocaleString()}</span> scan points
-              {ptCount > 2000 && <span className="text-slate-500 ml-1">(showing 2,000)</span>}
+              {ptCount > 2000 && <span className="text-ink-muted ml-1">(showing 2,000)</span>}
             </div>
           )}
 
           {/* Mobile panel toggle */}
           <button
             onClick={() => setShowPanel(p => !p)}
-            className={`absolute bottom-4 right-4 z-10 lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 bg-white/[0.06] backdrop-blur-2xl border border-white/[0.10] rounded-full text-xs font-medium text-slate-300 active:scale-[0.98] transition ${panelShadow}`}
+            className={`absolute bottom-4 right-4 z-10 lg:hidden flex items-center gap-1.5 px-3.5 py-2.5 bg-white/90 backdrop-blur-2xl border border-line rounded-full text-xs font-medium text-ink-muted active:scale-[0.98] transition ${panelShadow}`}
           >
             <SlidersHorizontalIcon weight="light" className="w-3.5 h-3.5" />
             Scan Area
@@ -566,16 +566,16 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
       </div>
 
       {/* ── Right panel ── */}
-      <div className={`${showPanel ? 'flex' : 'hidden'} lg:flex flex-col bg-white/[0.04] backdrop-blur-2xl border-l border-white/[0.10]
+      <div className={`${showPanel ? 'flex' : 'hidden'} lg:flex flex-col bg-white/90 backdrop-blur-2xl border-l border-line
         absolute inset-0 z-20 lg:relative lg:inset-auto lg:z-auto lg:w-72`}>
-        <div className="p-4 border-b border-white/[0.06] flex items-start justify-between">
+        <div className="p-4 border-b border-line flex items-start justify-between">
           <div>
-            <h3 className="text-sm font-display font-semibold text-white">Scan Area</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Draw your target neighborhood</p>
+            <h3 className="text-sm font-display font-semibold text-ink">Scan Area</h3>
+            <p className="text-xs text-ink-muted mt-0.5">Draw your target neighborhood</p>
           </div>
           <button
             onClick={() => setShowPanel(false)}
-            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition active:scale-[0.98] shrink-0"
+            className="lg:hidden p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-paper-bone transition active:scale-[0.98] shrink-0"
           >
             <XIcon weight="light" className="w-4 h-4" />
           </button>
@@ -588,7 +588,7 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
             <div>
               {drawingMode !== 'polygon' && (
                 <>
-                  <p className="text-xs text-slate-500 mb-3">
+                  <p className="text-xs text-ink-muted mb-3">
                     Click Draw, then click and drag on the map to outline your target area.
                   </p>
                   <button
@@ -603,7 +603,7 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
               {drawingMode === 'polygon' && (
                 <div className="space-y-2">
                   <div className="bg-brand-600/10 border border-brand-600/20 rounded-2xl px-3 py-2">
-                    <p className="text-xs text-brand-400 font-medium">
+                    <p className="text-xs text-brand-600 font-medium">
                       {isDragging ? 'Drawing… release to finish' : 'Click and drag on the map to draw'}
                     </p>
                   </div>
@@ -616,46 +616,46 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
           ) : (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-400 truncate">
+                <span className="text-xs font-medium text-ink-muted truncate">
                   {boundaryInput ? boundaryInput : 'Polygon drawn'}
                 </span>
-                <button onClick={handleClear} className="text-xs text-slate-500 hover:text-red-400 transition shrink-0 ml-2">Clear</button>
+                <button onClick={handleClear} className="text-xs text-ink-muted hover:text-red-500 transition shrink-0 ml-2">Clear</button>
               </div>
               <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-3 py-2">
-                <CheckCircleIcon weight="fill" className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <p className="text-xs text-emerald-400">Area selected</p>
+                <CheckCircleIcon weight="fill" className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <p className="text-xs text-emerald-600">Area selected</p>
               </div>
             </div>
           )}
 
           {/* Stats card */}
           {(ptCount > 0 || pointCount !== null) && (
-            <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 space-y-2">
+            <div className="bg-paper-bone border border-line rounded-2xl p-3 space-y-2">
               {largeArea ? (
                 <>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Est. Scan Points</span>
-                    <span className="text-brand-400 font-bold font-mono">~{(estimatedCount ?? 0).toLocaleString()}</span>
+                    <span className="text-ink-muted">Est. Scan Points</span>
+                    <span className="text-brand-600 font-bold font-mono">~{(estimatedCount ?? 0).toLocaleString()}</span>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">
+                  <p className="text-xs text-ink-muted leading-relaxed">
                     Large area — too big to scan directly. Draw a smaller custom area to run a scan.
                   </p>
                 </>
               ) : (
                 <>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Scan Points</span>
-                    <span className="text-brand-400 font-bold font-mono">{ptCount.toLocaleString()}</span>
+                    <span className="text-ink-muted">Scan Points</span>
+                    <span className="text-brand-600 font-bold font-mono">{ptCount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Est. Property Count</span>
-                    <span className="text-slate-300 font-mono">
+                    <span className="text-ink-muted">Est. Property Count</span>
+                    <span className="text-ink font-mono">
                       ~{Math.ceil(ptCount / 3).toLocaleString()}
-                      <span className="text-slate-600"> – </span>
+                      <span className="text-ink-muted"> – </span>
                       {ptCount.toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-[11px] text-ink-muted leading-relaxed">
                     Each scan point costs 1 credit. In dense urban areas, 1 credit ≈ 1 property. In rural or large-scale areas, a property may span multiple scan points (up to 3 credits or more each).
                   </p>
                 </>
@@ -664,7 +664,7 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
           )}
 
           {error && (
-            <p className="flex items-start gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2">
+            <p className="flex items-start gap-1.5 text-xs text-red-600 bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2">
               <WarningCircleIcon weight="light" className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               {error}
             </p>
@@ -672,20 +672,20 @@ export default function MapTab({ project, scanPoints, onPointsGenerated, isLoade
         </div>
 
         {/* Run button */}
-        <div className="p-4 border-t border-white/[0.06] space-y-2">
+        <div className="p-4 border-t border-line space-y-2">
           {noCreditsBlocked && (
-            <p className="flex items-center justify-center gap-1.5 text-xs text-center text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-2xl px-2 py-1.5">
+            <p className="flex items-center justify-center gap-1.5 text-xs text-center text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-2xl px-2 py-1.5">
               <WarningCircleIcon weight="light" className="w-3.5 h-3.5 shrink-0" />
               No credits remaining — contact your admin to add credits
             </p>
           )}
           {scanPoints?.length > 0 && !generating && !noCreditsBlocked && !keyLoading && (
-            <p className="text-xs text-center text-slate-400">
+            <p className="text-xs text-center text-ink-muted">
               {scanPoints.length.toLocaleString()} points from previous scan — re-draw to run again
             </p>
           )}
           {largeArea && (
-            <p className="text-xs text-center text-amber-400">
+            <p className="text-xs text-center text-amber-600">
               Area too large to scan — narrow your search to enable Run
             </p>
           )}

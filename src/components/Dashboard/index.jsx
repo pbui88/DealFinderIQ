@@ -12,10 +12,10 @@ const EASE = [0.32, 0.72, 0, 1]
 
 function StatCard({ label, value, sparkColor, highlight }) {
   return (
-    <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-5">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{label}</p>
+    <div className="bg-white border border-line rounded-2xl p-5">
+      <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-3">{label}</p>
       <div className="flex items-end justify-between">
-        <p className={`text-3xl font-bold font-display font-mono ${highlight ? 'text-brand-400' : 'text-white'}`}>
+        <p className={`text-3xl font-bold font-display font-mono ${highlight ? 'text-brand-600' : 'text-ink'}`}>
           {value}
         </p>
         <TrendUp weight="light" className="w-6 h-6 opacity-50" style={{ color: sparkColor }} />
@@ -30,13 +30,13 @@ function EmptyState({ onNew, reduce }) {
       initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: EASE }}
-      className="flex flex-col items-center justify-center py-24 px-8 text-center bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] rounded-2xl"
+      className="flex flex-col items-center justify-center py-24 px-8 text-center bg-white border border-line rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.04)]"
     >
       <div className="w-16 h-16 rounded-2xl bg-brand-600/10 border border-brand-600/20 flex items-center justify-center mb-5">
-        <MapPinArea weight="light" className="w-8 h-8 text-brand-400" />
+        <MapPinArea weight="light" className="w-8 h-8 text-brand-600" />
       </div>
-      <h3 className="text-base font-display font-semibold text-white mb-2">No scan projects yet</h3>
-      <p className="text-sm text-slate-500 mb-8 max-w-xs leading-relaxed">
+      <h3 className="text-base font-display font-semibold text-ink mb-2">No scan projects yet</h3>
+      <p className="text-sm text-ink-muted mb-8 max-w-xs leading-relaxed">
         Create a project, draw your scan area on the map, and DealFinderIQ will start collecting Street View imagery.
       </p>
       <button
@@ -116,16 +116,16 @@ export default function Dashboard() {
         <div className="flex items-start gap-3">
           <button
             onClick={openSidebar}
-            className="mt-1 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.05] transition-all duration-300 lg:hidden shrink-0"
+            className="mt-1 p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-slate-100 transition-all duration-300 lg:hidden shrink-0"
             aria-label="Open navigation"
           >
             <List weight="light" className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold font-display text-white">
+            <h1 className="text-2xl font-bold font-display text-ink">
               {firstName ? `${firstName}'s Records` : 'Records'}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">Manage your neighborhood scan records</p>
+            <p className="text-sm text-ink-muted mt-1">Manage your neighborhood scan records</p>
           </div>
         </div>
         <button

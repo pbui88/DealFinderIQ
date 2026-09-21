@@ -4,66 +4,67 @@
 
 @layer base {
   body {
-    @apply bg-navy-900 text-slate-200 antialiased;
+    @apply bg-paper text-ink antialiased;
     font-family: 'Manrope', 'Plus Jakarta Sans', system-ui, sans-serif;
   }
   ::-webkit-scrollbar        { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track  { @apply bg-navy-800; }
-  ::-webkit-scrollbar-thumb  { @apply bg-navy-600 rounded-full; }
+  ::-webkit-scrollbar-track  { @apply bg-paper-bone; }
+  ::-webkit-scrollbar-thumb  { @apply bg-line rounded-full; }
 }
 
 @layer components {
   /* ── Cards ── */
   .card {
-    @apply bg-navy-800 border border-white/[0.06] rounded-xl p-5;
+    @apply bg-white border border-line rounded-xl p-5 shadow-[0_2px_8px_rgba(15,23,42,0.04)];
   }
   .card-hover {
-    @apply card hover:border-white/[0.12] hover:bg-navy-700 transition-all cursor-pointer;
+    @apply card hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-all cursor-pointer;
   }
   .stat-card {
-    @apply bg-navy-800 border border-white/[0.06] rounded-xl p-5;
+    @apply bg-white border border-line rounded-xl p-5 shadow-[0_2px_8px_rgba(15,23,42,0.04)];
   }
 
   /* ── Inputs ── */
   .input {
-    @apply w-full bg-navy-800 border border-white/[0.08] rounded-lg px-3 py-2 text-sm
-           text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2
-           focus:ring-brand-600/50 focus:border-brand-600/50 transition;
+    @apply w-full bg-white border border-line rounded-lg px-3 py-2 text-sm
+           text-ink placeholder-ink-faint focus:outline-none focus:ring-2
+           focus:ring-brand-600/20 focus:border-brand-500/50 transition;
   }
   .input-dark { @apply input; }
   .label {
-    @apply block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide;
+    @apply block text-xs font-semibold text-ink-muted mb-1.5 uppercase tracking-wide;
   }
 
   /* ── Buttons ── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2
-           text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2
+           text-sm font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
+           active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-600/25;
+    @apply btn bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/25;
   }
   .btn-ghost {
-    @apply btn hover:bg-white/[0.06] text-slate-400 hover:text-slate-200;
+    @apply btn hover:bg-paper-bone text-ink-muted hover:text-ink;
   }
   .btn-outline {
-    @apply btn border border-white/[0.10] hover:bg-white/[0.06] text-slate-300 hover:text-white;
+    @apply btn border border-line hover:bg-paper-bone text-ink-muted hover:text-ink;
   }
   .btn-danger {
-    @apply btn bg-red-600 hover:bg-red-700 text-white;
+    @apply btn bg-red-600 hover:bg-red-500 text-white;
   }
 
   /* ── Badges ── */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border;
   }
-  .badge-red    { @apply badge bg-red-500/10    text-red-400    border-red-500/20; }
-  .badge-orange { @apply badge bg-orange-500/10 text-orange-400 border-orange-500/20; }
-  .badge-yellow { @apply badge bg-amber-500/10  text-amber-400  border-amber-500/20; }
-  .badge-green  { @apply badge bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
-  .badge-blue   { @apply badge bg-blue-500/10   text-blue-400   border-blue-500/20; }
-  .badge-slate  { @apply badge bg-slate-500/10  text-slate-400  border-slate-500/20; }
+  .badge-red    { @apply badge bg-tagRed-bg    text-tagRed-text    border-transparent; }
+  .badge-orange { @apply badge bg-amber-50     text-amber-700      border-amber-200; }
+  .badge-yellow { @apply badge bg-tagYellow-bg text-tagYellow-text border-transparent; }
+  .badge-green  { @apply badge bg-tagGreen-bg  text-tagGreen-text  border-transparent; }
+  .badge-blue   { @apply badge bg-tagBlue-bg   text-tagBlue-text   border-transparent; }
+  .badge-slate  { @apply badge bg-slate-100    text-ink-muted      border-transparent; }
 
   /* ── Divider ── */
-  .divider { @apply border-t border-white/[0.06]; }
+  .divider { @apply border-t border-line; }
 }

@@ -42,14 +42,14 @@ export default function NewProjectModal({ onClose }) {
         initial={reduce ? false : { opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.3, ease: EASE }}
-        className="relative w-full max-w-md bg-white/5 border border-white/10 p-1.5 rounded-[1.75rem]"
+        className="relative w-full max-w-md bg-slate-100 border border-line p-1.5 rounded-[1.75rem]"
       >
-        <div className="bg-navy-900 rounded-[calc(1.75rem-0.375rem)]">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-            <h2 className="font-display font-semibold text-white">New Scan List</h2>
+        <div className="bg-white rounded-[calc(1.75rem-0.375rem)]">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+            <h2 className="font-display font-semibold text-ink">New Scan List</h2>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-300 active:scale-[0.98]"
+              className="p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-slate-100 transition-all duration-300 active:scale-[0.98]"
             >
               <X weight="light" className="w-4 h-4" />
             </button>
@@ -57,32 +57,32 @@ export default function NewProjectModal({ onClose }) {
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">List Name *</label>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5 uppercase tracking-wide">List Name *</label>
               <input
                 autoFocus
                 value={form.name}
                 onChange={e => set('name', e.target.value)}
                 placeholder="e.g. North Phoenix Q2 2026"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300"
+                className="w-full bg-white border border-line rounded-xl px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300"
                 maxLength={100}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                Description <span className="normal-case text-slate-600">(optional)</span>
+              <label className="block text-xs font-semibold text-ink-muted mb-1.5 uppercase tracking-wide">
+                Description <span className="normal-case text-ink-faint">(optional)</span>
               </label>
               <textarea
                 value={form.description}
                 onChange={e => set('description', e.target.value)}
                 placeholder="Notes about this scan area…"
                 rows={3}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 resize-none"
+                className="w-full bg-white border border-line rounded-xl px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/20 transition-all duration-300 resize-none"
                 maxLength={500}
               />
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                 {error}
               </p>
             )}
@@ -91,7 +91,7 @@ export default function NewProjectModal({ onClose }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border border-white/10 text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border border-line text-ink-muted hover:text-ink hover:bg-slate-50 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
               >
                 Cancel
               </button>
