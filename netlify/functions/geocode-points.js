@@ -91,14 +91,47 @@ function extractAddress(results) {
   return (!address || looksLikeLatLng(address)) ? null : address
 }
 
+// Positionstack calls used to fire completely unthrottled — with CAP points
+// processed concurrently (each capable of 2-3 Positionstack calls: two-pass
+// reverseGeocode plus a zip fallback), a single geocode-points invocation
+// could burst 40-80 simultaneous requests, well past most plans' per-second
+// rate limit. That was observed taking down over half a batch with
+// "exceeded the maximum rate limitation" errors. Unlike Nominatim's full
+// 1/sec serialization below, cap concurrency instead of fully serializing —
+// a paid Positionstack plan allows far more throughput than Nominatim's free
+// policy, and full serialization would blow the 26s function timeout.
+const POSITIONSTACK_CONCURRENCY = 4
+let positionstackActive = 0
+const positionstackQueue = []
+function throttlePositionstack(task) {
+  return new Promise((resolve, reject) => {
+    const run = () => {
+      positionstackActive++
+      task().then(resolve, reject).finally(() => {
+        positionstackActive--
+        const next = positionstackQueue.shift()
+        if (next) next()
+      })
+    }
+    if (positionstackActive < POSITIONSTACK_CONCURRENCY) run()
+    else positionstackQueue.push(run)
+  })
+}
+
+function fetchPositionstack(url) {
+  return throttlePositionstack(async () => {
+    const res = await fetch(url)
+    return res.json()
+  })
+}
+
 // Returns a property-level address or null.
 // Retries once with a wider candidate pool if the first pass yields nothing.
 async function reverseGeocode(lat, lng) {
   const base = `https://api.positionstack.com/v1/reverse?access_key=${process.env.POSITIONSTACK_API_KEY}&query=${lat},${lng}&output=json`
 
   // First attempt — tight limit
-  const res1  = await fetch(`${base}&limit=10`)
-  const data1 = await res1.json()
+  const data1 = await fetchPositionstack(`${base}&limit=10`)
   if (data1.error) throw new Error(data1.error.message || `Positionstack error (${data1.error.code})`)
 
   const address1 = extractAddress(data1.data || [])
@@ -106,8 +139,7 @@ async function reverseGeocode(lat, lng) {
 
   // Retry with wider candidate pool to find a property-level hit
   console.warn(`[geocode] first pass found no property address at ${lat},${lng} — retrying with limit=25`)
-  const res2  = await fetch(`${base}&limit=25`)
-  const data2 = await res2.json()
+  const data2 = await fetchPositionstack(`${base}&limit=25`)
   if (data2.error) throw new Error(data2.error.message || `Positionstack error (${data2.error.code})`)
 
   const address2 = extractAddress(data2.data || [])
@@ -161,10 +193,9 @@ async function lookupZipNominatim(lat, lng) {
 // passes a strict 5-digit / ZIP+4 format check.
 async function lookupZipPositionstack(lat, lng) {
   try {
-    const res  = await fetch(
+    const data = await fetchPositionstack(
       `https://api.positionstack.com/v1/reverse?access_key=${process.env.POSITIONSTACK_API_KEY}&query=${lat},${lng}&output=json&limit=1`
     )
-    const data = await res.json()
     if (data.error) return null
     const pc = (data.data?.[0]?.postal_code || '').trim()
     const m  = pc.match(/^(\d{5})(-\d{4})?$/)
